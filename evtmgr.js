@@ -5,10 +5,12 @@ var calendar;
 var flgFirstClick;
 var editTemplate;
 var createTemplate;
+var rruleTemplate;
 var calendarID;  //Must be set in the parent page
 var DIR_FC="/js/fullcalendar-1.6.2";
 var DIV_ID="eventEdit";
 var DIV_ID_C="eventCreate";
+var RRULE_DIV_ID="divRRule";
 
 var fmtDateTime =("YYYY/MM/DD HH:mm Z");
 var fmtDisplay =("MM/DD/YYYY HH:mm");
@@ -157,6 +159,27 @@ function editCalendarEvent(evt){
 	editFCEvent(evt,null,null,opts);
 }
 
+function editRRule(evt){
+	var divID = RRULE_DIV_ID;
+	var drr = $('#' + divID);
+	if(!drr[0]){
+		$("body").append("<div id='" + divID + "'></div>");
+		drr = $('#' + divID);
+		if(!drr){
+			alert("Could not create div " + divID);
+			return;
+		}
+	}
+	rrule = getRRule(evt.rruleID);
+	//setRRuleFields(rrule);
+	
+	var str = getRRuleTemplate();
+	str = supplant(str, rrule);
+	drr.html(str);
+	drr.show();
+	
+}
+
 function editFCEvent(evt, jsEvt, view, opts) {
 	var divID = DIV_ID;
 	var formID = "frmEditEvent";
@@ -211,6 +234,9 @@ function editFCEvent(evt, jsEvt, view, opts) {
 		$('#flgAllDay').change(function(){
 			setAllDayFields(this.checked);
 		});
+		$('#flgRepeating').change(function(event){
+			editRecurrence(evt));
+		}
 		setAllDayFields(evt.allDay);	
 		//Load the event category select
 		setEvtCategorySelect(evt);
@@ -261,6 +287,16 @@ function formatDate(myDate) {
 			.getFullYear());
 }
 
+function getRRule(rruleID){
+	var url = "/cal?pAction=rruleRetrieve&rruleID=" + rruleID;
+	var rrule;
+	var fLoad = function(data){
+		rrule = data;
+	}
+	jqGet(url,true,fLoad);
+	return rrule;
+}
+
 function getCalendarEventRecord(evt){
 	//Get the full CalendarEvent record
 	//Returns an event object with all the FullCalendar fields + all the app specific fields
@@ -288,7 +324,7 @@ function getCalendarEventRecord(evt){
 		evtC['end'] = moment(evtC['end']).toDate();
 
 	}
-	xhrGet(url,true,fLoad);
+	jqGet(url,true,fLoad);
 	return evtC;	
 }
 
@@ -309,7 +345,7 @@ function getCreateTemplate(){
 		tmp = data;
 		createTemplate = tmp;
 	}
-	xhrGet(url,true,fLoad);
+	jqGet(url,true,fLoad);
 	return createTemplate;
 }
 
@@ -337,9 +373,25 @@ function getEditTemplate(eventID){
 		tmp = data;
 		editTemplate = tmp;
 	}
-	xhrGet(url,true,fLoad);
+	jqGet(url,true,fLoad);
 	return editTemplate;
 }
+
+function getRRuleTemplate(){
+	if(rruleTemplate) return rruleTemplate;
+	var ts = new Date().getTime();
+	var url=DIR_FC +"/evtmgr/CreateRRule.htm";
+	url += "?" + ts;
+
+	var tmp;
+	var fLoad = function(data){
+		tmp = data;
+		createTemplate = tmp;
+	}
+	jqGet(url,true,fLoad);
+	return createTemplate;
+}
+
 function resizeHdlr( event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
 
 
@@ -758,7 +810,7 @@ function updateEventTimes(evt){
 	url +="&evtStartString=" + start.format(fmtDateTime);
 	url +="&evtEndString=" + end.format(fmtDateTime);
 	url +="&flgUpdate=true";
-	xhrGet(url,false,null);
+	jqGet(url,false,null);
 }
 
 function updateAndCloseEvent(f){
