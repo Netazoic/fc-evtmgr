@@ -1,0 +1,99 @@
+#eventWrapper{display:table; margin:0 auto; padding:0px; width:98%; z-index:1;}
+.fldRow{ display:table-row; margin-top:10px; width:100%; }
+.evtLabel{color:#4d4d4d; display:table-cell;  margin:0; width:200px; font-weight:normal; font-size:12px; padding:0px; text-align:right; vertical-align: middle;}
+.evtField{display:table-cell; padding:5px 0 5px 25px; text-align:left; }
+.ui-widget input {color:#4d4d4d !important; font-size:12px !important;}
+.ui-widget select{font-size:.7em}
+.timepicker input{width:130px}
+.evtField textarea{color:#4d4d4d; font-weight:normal; font-size:12px; }
+
+#eventWrapper button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #dfdfdf) );
+	background:-moz-linear-gradient( center top, #ededed 5%, #dfdfdf 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#dfdfdf');
+	background-color:#ededed;
+	-webkit-border-top-left-radius:6px;
+	-moz-border-radius-topleft:6px;
+	border-top-left-radius:6px;
+	-webkit-border-top-right-radius:6px;
+	-moz-border-radius-topright:6px;
+	border-top-right-radius:6px;
+	-webkit-border-bottom-right-radius:6px;
+	-moz-border-radius-bottomright:6px;
+	border-bottom-right-radius:6px;
+	-webkit-border-bottom-left-radius:6px;
+	-moz-border-radius-bottomleft:6px;
+	border-bottom-left-radius:6px;
+	text-indent:0;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	color:#777777;
+	font-family:arial;
+	font-size:15px;
+	font-weight:bold;
+	font-style:normal;
+	height:30px;
+	line-height:30px;
+	margin-left:20px;
+	width:100px;
+	text-decoration:none;
+	text-align:center;
+	text-shadow:1px 1px 0px #ffffff;
+}
+#eventWrapper button:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+	background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
+	background-color:#dfdfdf;
+}
+
+#eventWrapper button:active {
+	position:relative;
+	top:1px;
+}
+#eventWrapper button:first-child {margin:0}
+
+/*primary event categories */
+.fc-event.eventSTYLE00 {background-color:#231f20;}
+.fc-event.eventSTYLE01 {background-color:#ad021c;}
+.fc-event.eventSTYLE02 {background-color:#134d90;}
+.fc-event.eventSTYLE03 {background-color:#995da4;}
+.fc-event.eventSTYLE04 {background-color:#22177d;}
+.fc-event.eventSTYLE05 {background-color:#3a5c2e;}
+.fc-event.eventSTYLE06 {background-color:#006444;}
+.fc-event.eventSTYLE07 {background-color:#6c3108;}
+.fc-event.eventSTYLE08 {background-color:#35291f;}
+.fc-event.eventSTYLE09 {background-color:#791235;}
+.fc-event.eventSTYLE10 {background-color:#cccccc;}
+
+/* For the category code selection input */
+#categoryCode {background-color:white;color:black;}
+#categoryCode.select-category{background-color:white;color:black;}
+#categoryCode.eventSTYLE00 {background-color:white;color:#231f20;}
+#categoryCode.eventSTYLE01 {background-color:white;color:#ad021c;}
+#categoryCode.eventSTYLE02 {background-color:white;color:#134d90;}
+#categoryCode.eventSTYLE03 {background-color:white;color:#995da4;}
+#categoryCode.eventSTYLE04 {background-color:white;color:#22177d;}
+#categoryCode.eventSTYLE05 {background-color:white;color:#3a5c2e;}
+#categoryCode.eventSTYLE06 {background-color:white;color:#006444;}
+#categoryCode.eventSTYLE07 {background-color:white;color:#6c3108;}
+#categoryCode.eventSTYLE08 {background-color:white;color:#35291f;}
+#categoryCode.eventSTYLE09 {background-color:white;color:#791235;}
+#categoryCode.eventSTYLE10 {background-color:white;color:#cccccc;}
+
+/*For the options in the category code selector */
+option.select-category{background-color:white;color:black;}
+option.eventSTYLE00 {background-color:white;color:#231f20;}
+option.eventSTYLE01 {background-color:white;color:#ad021c;}
+option.eventSTYLE02 {background-color:white;color:#134d90;}
+option.eventSTYLE03 {background-color:white;color:#995da4;}
+option.eventSTYLE04 {background-color:white;color:#22177d;}
+option.eventSTYLE05 {background-color:white;color:#3a5c2e;}
+option.eventSTYLE06 {background-color:white;color:#006444;}
+option.eventSTYLE07 {background-color:white;color:#6c3108;}
+option.eventSTYLE08 {background-color:white;color:#35291f;}
+option.eventSTYLE09 {background-color:white;color:#791235;}
+option.eventSTYLE10 {background-color:white;color:#cccccc;}
