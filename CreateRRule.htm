@@ -1,4 +1,7 @@
 <link id="eventEditStyles" rel="stylesheet" href="/js/fullcalendar-1.6.2/evtmgr/event.css"/>
+<style type="text/css">
+.evtLabel{width:100px;}
+</style>
 <div id="eventWrapper" >
 <form id="frmCreateRRule">
 <input type="hidden" name="evtStart" id="evtStart" value="{start}"/>
@@ -19,7 +22,7 @@
 <div class="fldRow">
     <div class="evtLabel">Ends:</div>
         <div class="evtField">
-            <input type="radio" name="rrUntil_never" id="rrUntil_never"><label for="rrUntil_never">Never</label>
+            <input type="radio" name="rrUntil_never" id="rrUntil_never"><label for="rrUntil_never">Never</label><br/>
             <input type="radio" name="rrUntil_count" id="rrUntil_count"><label for="rrUntil_count">After</label>
                 <input name="rrCount" id="rrCount" value="{rrCount}"/> occurrences</br>
             <input type="radio" name="rrUntil_date" id="rrUntil_date"><label for="rrUntil_date">On</label>

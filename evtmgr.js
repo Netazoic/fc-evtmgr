@@ -176,7 +176,7 @@ function editRRule(evt){
 	var str = getRRuleTemplate();
 	str = supplant(str, rrule);
 	drr.html(str);
-	drr.show();
+	drr.dialog();
 	
 }
 
@@ -235,8 +235,8 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			setAllDayFields(this.checked);
 		});
 		$('#flgRepeating').change(function(event){
-			editRecurrence(evt));
-		}
+			editRRule(evt);
+		});
 		setAllDayFields(evt.allDay);	
 		//Load the event category select
 		setEvtCategorySelect(evt);
@@ -288,7 +288,10 @@ function formatDate(myDate) {
 }
 
 function getRRule(rruleID){
-	var url = "/cal?pAction=rruleRetrieve&rruleID=" + rruleID;
+	var url = "/cal?pAction=GetRecords";
+	url += "&q=/CAL/Calendar/sql/GetRRule.sql";
+	
+	url += "&rruleID=" + rruleID;
 	var rrule;
 	var fLoad = function(data){
 		rrule = data;
@@ -305,7 +308,7 @@ function getCalendarEventRecord(evt){
 	var evtC;
 	var val;
 	var fLoad = function(data){
-		evtC = evalJSON(data);
+		evtC = data;
 		//fix problem chars
 		for (k in evtC){
 			val = evtC[k];
@@ -345,7 +348,7 @@ function getCreateTemplate(){
 		tmp = data;
 		createTemplate = tmp;
 	}
-	jqGet(url,true,fLoad);
+	jqGet(url,true,fLoad,null,'text');
 	return createTemplate;
 }
 
@@ -373,7 +376,7 @@ function getEditTemplate(eventID){
 		tmp = data;
 		editTemplate = tmp;
 	}
-	jqGet(url,true,fLoad);
+	jqGet(url,true,fLoad,null,'text');
 	return editTemplate;
 }
 
@@ -388,7 +391,7 @@ function getRRuleTemplate(){
 		tmp = data;
 		createTemplate = tmp;
 	}
-	jqGet(url,true,fLoad);
+	jqGet(url,true,fLoad,null,'text');
 	return createTemplate;
 }
 
