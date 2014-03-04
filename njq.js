@@ -180,6 +180,30 @@ function setCheckBoxes(containerID, newOptions, currVals,commonID){
 
 }
 
+function setOptions(selID,newOptions,selectedVal,flgKeepFirst){
+	//Thanks to CMS on http://stackoverflow.com/questions/1801499/how-to-change-options-of-select-with-jquery
+	//Set options in an HTML select input
+	//New options is a set of options in the form key:val, where key is the diplay and val is the actual value
+	/*var newOptions = {"Option 1": "value1",
+			  "Option 2": "value2",
+			  "Option 3": "value3"
+			};
+	*/
+	var $el = $("#" + selID);
+	if(!flgKeepFirst)$el.empty(); // remove old options
+	else $('#' + selID + ' option:gt(0)').remove(); // remove all options, but not the first
+ 	$.each(newOptions, function(key, value) {
+			  $el.append($("<option></option>")
+			     .attr("value", value).text(key));
+	});
+ 	
+ 	if(selectedVal)	$el.val(selectedVal);
+}
+
+function setSelectedVal(selID,selectedVal){
+	var el = $("#" + selID);
+	el.val(selectedVal);
+}
 
 function showDialog(id, opts) {
 	// id is a divID

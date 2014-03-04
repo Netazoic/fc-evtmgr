@@ -131,7 +131,19 @@ function deleteFCEvent(f){
 		var id = event.id;
 		calendar.fullCalendar('removeEvents', id );	
 		};
-	xhrSubmit(f,false,fLoad);
+	jqSubmit(f,false,fLoad);
+}
+
+function deleteRRule(evt){
+	var url ="/cal?pAction=rruleDelete";
+	url += "&rruleID=" + evt.rruleID;
+	
+	var fLoad = function(data){
+		event = evalJSON(data);
+		var id = event.id;
+		//calendar.fullCalendar('removeEvents', id );	
+		};
+	jqGet(url,false,fLoad);
 }
 function dropHdlr(event,dayDelta,minuteDelta,allDay,revertFunc) {
 
@@ -171,12 +183,23 @@ function editRRule(evt){
 		}
 	}
 	rrule = getRRule(evt.rruleID);
+	if(!rrule) rrule = evt;
 	//setRRuleFields(rrule);
 	
 	var str = getRRuleTemplate();
 	str = supplant(str, rrule);
 	drr.html(str);
-	drr.dialog();
+	var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY'};
+	var intervalOpts = {};
+	for(j=1;j<51;j++){
+		intervalOpts[j]=j;
+	}
+	setOptions("rFrequencyCode",rruleOpts);
+	setOptions("rrInterval",intervalOpts);
+	$("#rFrequencyCode").val(rrule.rfrequencycode);
+	$("#rrInterval").val(rrule.rrinterval);
+
+	drr.dialog({width:'600px'});
 	
 }
 
@@ -235,7 +258,8 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			setAllDayFields(this.checked);
 		});
 		$('#flgRepeating').change(function(event){
-			editRRule(evt);
+			if(this.checked)editRRule(evt);
+			else deleteRRule(evt);
 		});
 		setAllDayFields(evt.allDay);	
 		//Load the event category select
@@ -288,11 +312,12 @@ function formatDate(myDate) {
 }
 
 function getRRule(rruleID){
+	var rrule = null;
+	if(!rruleID) return null;
 	var url = "/cal?pAction=GetRecords";
 	url += "&q=/CAL/Calendar/sql/GetRRule.sql";
 	
 	url += "&rruleID=" + rruleID;
-	var rrule;
 	var fLoad = function(data){
 		rrule = data;
 	}

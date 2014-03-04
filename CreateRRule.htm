@@ -1,6 +1,8 @@
-<link id="eventEditStyles" rel="stylesheet" href="/js/fullcalendar-1.6.2/evtmgr/event.css"/>
+
 <style type="text/css">
-.evtLabel{width:100px;}
+.evtLabel{float:left;width:100px;}
+.ui-widget input{float:left;clear:left;}
+#rruntil{float:left;clear:left;}
 </style>
 <div id="eventWrapper" >
 <form id="frmCreateRRule">
@@ -11,22 +13,22 @@
 <input type="hidden" name="flgUpdate" id="flgUpdate" value="true"/>
 
 <div class="fldRow">
-    <div class="evtLabel">Repeats:</div><div class="evtField"><input id="rFrequencyCode" name="rFrequencyCode" maxlength="80" value="{rFrequencyCode}" style="width:317px;"/></div>
+    <div class="evtLabel">Repeats:</div><div class="evtField"><select id="rFrequencyCode" name="rFrequencyCode" maxlength="80" value="{rFrequencyCode}" style="width:317px;"/></div>
 </div>
 <div class="fldRow">
-    <div class="evtLabel">Repeats every:</div><div class="evtField"><input id="rrInterval" name="rrInterval" maxlength="80" value="{rrInterval}" style="width:317px;"/></div>
+    <div class="evtLabel">Repeats every:</div><div class="evtField"><select id="rrInterval" name="rrInterval" maxlength="80" value="{rrInterval}" style="width:40px;"/></div>
 </div>
 <div class="fldRow">
-    <div class="evtLabel">Starts On:</div><div class="evtField">{start}</div>
+    <div class="evtLabel">Starts On:</div><div class="evtField">{startFmt}</div>
 </div>
 <div class="fldRow">
     <div class="evtLabel">Ends:</div>
         <div class="evtField">
-            <input type="radio" name="rrUntil_never" id="rrUntil_never"><label for="rrUntil_never">Never</label><br/>
-            <input type="radio" name="rrUntil_count" id="rrUntil_count"><label for="rrUntil_count">After</label>
-                <input name="rrCount" id="rrCount" value="{rrCount}"/> occurrences</br>
-            <input type="radio" name="rrUntil_date" id="rrUntil_date"><label for="rrUntil_date">On</label>
-                <input name="rrUntil" id="rrUntil" value="{rrUntil}"/>
+            <input type="radio" name="rrUntil" id="rrUntil" value="never" style="float:left;clear:left;"><label for="rrUntil_never">Never</label><br/>
+            <input type="radio" name="rrUntil" id="rrUntil" value="count" style="float:left;clear:left;"><label for="rrUntil_count">After</label>
+                <input name="rrCount" id="rrCount" value="{rrCount}"  style="float:left;clear:left;width:50px;"/> occurrences</br>
+            <input type="radio" name="rrUntil" id="rrUntil" value="date" style="float:left;clear:left;"><label for="rrUntil_date">On</label>
+                <input name="rrUntil" id="rrUntil" value="{rrUntil}"  style="float:left;clear:left;"/>
         </div>
 </div>
 
