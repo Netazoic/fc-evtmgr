@@ -36,6 +36,9 @@ function closeEventCreate() {
 function closeEventEdit() {
 	closeDialog(DIV_ID);
 }
+function closeRRule(){
+	closeDialog( RRULE_DIV_ID);
+}
 
 function contextMenu(event, element) {
 	alert('context menu!');
@@ -77,6 +80,42 @@ function createFCEventAndCloseDialog(f){
 	var id = createFCEvent(f);
 	if(! id) return false;
 	closeDialog(DIV_ID_C);
+}
+
+function createRRule(f) {
+	// create a recurrence rule based on form data
+
+	if(!f.rFrequencyCode.value){
+		alert ("The frequency code field cannot be empty");
+		return false;
+	}
+	// Send the event to the back end
+	var url = "/cal?pAction=rruleCreate";
+	f.action = url;
+	var event;
+	var id;
+	var fLoad = function(data) {
+		event = data;
+		// Times are passed through json as millisecond values.
+		// These need to be converted into actual date objects.
+		event.start = new Date(event.start);
+		event.end = new Date(event.end);
+ 		// render in the calendar
+		calendar.fullCalendar('renderEvent', event, false // make the event
+															// not "stick"
+		);
+		id = event.id;
+	}
+	// var jqID = "#" + f.id;
+	// $.post(url, $(jqID).serialize(), fLoad);
+	jqSubmit(f, true, fLoad);
+	return id;
+}
+
+function createRRuleAndCloseDiagog(f){
+	var id = createRRule(f);
+	if(!id) return false;
+	closeDialog( RRULE_DIV_ID);
 }
 
 function createAndEditEvent(f){
@@ -183,7 +222,11 @@ function editRRule(evt){
 		}
 	}
 	rrule = getRRule(evt.rruleID);
+
 	if(!rrule) rrule = evt;
+	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
+	var startFmt = start.format(fmtDateTime);
+	rrule['startFmt'] = startFmt;
 	//setRRuleFields(rrule);
 	
 	var str = getRRuleTemplate();
@@ -196,8 +239,30 @@ function editRRule(evt){
 	}
 	setOptions("rFrequencyCode",rruleOpts);
 	setOptions("rrInterval",intervalOpts);
-	$("#rFrequencyCode").val(rrule.rfrequencycode);
-	$("#rrInterval").val(rrule.rrinterval);
+	//$("#rFrequencyCode").val(rrule.rfrequencycode);
+	//$("#rrInterval").val(rrule.rrinterval);
+	$(".datepicker").datepicker();
+	$("#rrCount").change(function(evt){
+		$('#rrUntil').val("");
+		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
+	});
+	$("#rrUntil").change(function(evt){
+		$("#rrCount").val("");
+		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+
+	});
+	$("input[name='rad_rrUntil']").change(function(evt){
+		var val = $(this).val();
+		if(val == 'date'){
+			$("#rrCount").val("");
+		}
+		else if(val == 'count'){
+			$('#rrUntil').val("");
+		}
+	})
+
+	$("#btnCreateRRule").show();
+	$("#btnCancelCreateRRule").show();
 
 	drr.dialog({width:'600px'});
 	
@@ -258,9 +323,23 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			setAllDayFields(this.checked);
 		});
 		$('#flgRepeating').change(function(event){
-			if(this.checked)editRRule(evt);
-			else deleteRRule(evt);
+			if(this.checked){
+				editRRule(evt);
+				$("#editRepeat").show();
+			}
+			else{
+				deleteRRule(evt);
+				$("#editRepeat").hide();
+			}
+		});	
+		$("#editRepeat").click(function(event){
+			editRRule(evt);
 		});
+		if(evt.flgRepeating){
+			$('#flgRepeating').prop('checked', true);
+			$("#editRepeat").show();
+		}
+		
 		setAllDayFields(evt.allDay);	
 		//Load the event category select
 		setEvtCategorySelect(evt);
@@ -296,6 +375,8 @@ function fixEventSend(event){
 	if(!val) val = event.allDay;
 	if(val == 't'|| val == "true") event.allDay = true;
 	else event.allDay = false;
+	val = event.flgrepeating;
+	if(val == 't' || val == "true") event.flgRepeating = true;
 	// Event styles
 	event.className = "event" + event.categorycode;
 	//if(event.categorycode) event.color = "red";

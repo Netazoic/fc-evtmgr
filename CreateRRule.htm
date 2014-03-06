@@ -24,11 +24,12 @@
 <div class="fldRow">
     <div class="evtLabel">Ends:</div>
         <div class="evtField">
-            <input type="radio" name="rrUntil" id="rrUntil" value="never" style="float:left;clear:left;"><label for="rrUntil_never">Never</label><br/>
-            <input type="radio" name="rrUntil" id="rrUntil" value="count" style="float:left;clear:left;"><label for="rrUntil_count">After</label>
-                <input name="rrCount" id="rrCount" value="{rrCount}"  style="float:left;clear:left;width:50px;"/> occurrences</br>
-            <input type="radio" name="rrUntil" id="rrUntil" value="date" style="float:left;clear:left;"><label for="rrUntil_date">On</label>
-                <input name="rrUntil" id="rrUntil" value="{rrUntil}"  style="float:left;clear:left;"/>
+               <input type="radio" name="rad_rrUntil" value="count" style="float:left;clear:left">
+                    <label for="rrCount" style="float:left;">After&nbsp;</label>
+                    <input name="rrCount" id="rrCount" value="{rrCount}"  style="float:left;width:50px;"/> <label style="float:left;">occurrences</label></br>
+               <input type="radio" name="rad_rrUntil" value="date" style="float:left;clear:left">
+                    <label for="rrUntil" style="float:left;">On&nbsp;</label>
+                    <span class="datepickerw" style="float:left;" ><input class="datepicker" id="rrUntil" name="rrUntil" value="{rrUntil}"/></span>
         </div>
 </div>
 
@@ -36,14 +37,12 @@
     <div class="evtLabel">summary:</div><div class="evtField" id="rrule_summary">{rrule_summary}</div>
 </div>
 
+
 <div style="display:block; margin-top:1em"></div>
 <div class="fldRow">
-  <div class="evtLabel"></div>
-  <div class="evtField">
-    <button id="btnCreateRRule" class="evtButton" style="display:none;" onclick="createRRuleAndCloseDialog(this.form);return false;">Create</button>
-    <button id='btnCancelCreateRRule' class="evtButton" style="display:none;" onclick="closeRRuleCreate();return false;">Cancel</button>
-  </div>
-</div>
+    <button id="btnCreateRRule" class="evtButton" style="display:none;" onclick="createRRule(this.form);closeRRule();return false;">Create</button>
+    <button id='btnCancelCreateRRule' class="evtButton" style="display:none;" onclick="closeRRule();return false;">Cancel</button>
+
 </div>
 
 </form>
