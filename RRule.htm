@@ -1,0 +1,51 @@
+
+<style type="text/css">
+.evtLabel{float:left;width:100px;}
+.ui-widget input{float:left;clear:left;}
+#rruntil{float:left;clear:left;}
+</style>
+<div id="eventWrapper" >
+<form id="frmCreateRRule">
+<input type="hidden" name="evtStart" id="evtStart" value="{evtStart}"/>
+<input type="hidden" name="evtEnd" id="evtEnd" value="{evtEnd}"/>
+<input type="hidden" name="eventID" id="eventID" value="{eventID}"/>
+<input type="hidden" name="rruleID" id="rruleID" value="{rruleID}"/>
+<input type="hidden" name="calendarID" id="calendarID" value="{calendarID}"/>
+<input type="hidden" name="flgUpdate" id="flgUpdate" value="true"/>
+
+<div class="fldRow">
+    <div class="evtLabel">Repeats:</div><div class="evtField"><select id="rFrequencyCode" name="rFrequencyCode" maxlength="80" value="{rFrequencyCode}" style="width:317px;"/></div>
+</div>
+<div class="fldRow">
+    <div class="evtLabel">Repeats every:</div><div class="evtField"><select id="rrInterval" name="rrInterval" maxlength="80" value="{rrInterval}" style="width:40px;"/></div>
+</div>
+<div class="fldRow">
+    <div class="evtLabel">Starts On:</div><div class="evtField">{startFmt}</div>
+</div>
+<div class="fldRow">
+    <div class="evtLabel">Ends:</div>
+        <div class="evtField">
+               <input type="radio" name="rad_rrUntil" value="count" style="float:left;clear:left">
+                    <label for="rrCount" style="float:left;">After&nbsp;</label>
+                    <input name="rrCount" id="rrCount" value="{rrCount}"  style="float:left;width:50px;"/> <label style="float:left;">occurrences</label></br>
+               <input type="radio" name="rad_rrUntil" value="date" style="float:left;clear:left">
+                    <label for="rrUntil" style="float:left;">On&nbsp;</label>
+                    <span class="datepickerw" style="float:left;" ><input class="datepicker" id="rrUntil" name="rrUntil" value="{rrUntil}"/></span>
+        </div>
+</div>
+
+<div class="fldRow">
+    <div class="evtLabel">summary:</div><div class="evtField" id="rrule_summary">{rrule_summary}</div>
+</div>
+
+
+<div style="display:block; margin-top:1em"></div>
+<div class="fldRow">
+    <button id="btnUpdateRRule" class="evtButton" style="display:none;" onclick="updateRRule(this.form);closeRRule();return false;">Update</button>
+    <button id="btnCreateRRule" class="evtButton" style="display:none;" onclick="createRRule(this.form);closeRRule();return false;">Create</button>
+    <button id='btnCancelCreateRRule' class="evtButton" style="display:none;" onclick="closeRRule();return false;">Cancel</button>
+
+</div>
+
+</form>
+</div>

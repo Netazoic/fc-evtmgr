@@ -11,12 +11,14 @@ var DIR_FC="/js/fullcalendar-1.6.2";
 var DIV_ID="eventEdit";
 var DIV_ID_C="eventCreate";
 var RRULE_DIV_ID="divRRule";
+var RRULE_Template = "RRule.htm";
 
 var fmtDateTime =("YYYY/MM/DD HH:mm Z");
 var fmtDisplay =("MM/DD/YYYY HH:mm");
 var fmtDay = ("MM/DD/YYYY");
 var fmtTime = ("h:mma");
 var fmtFC = ("MM/DD/YYYY HH:mma");
+var fmtICal = ("YYYYMMDD'T'HHmmss");
 
 var globEvent;
 //Minimum dimensions for event create/edit dialog
@@ -24,6 +26,21 @@ var minHeight="500";
 var minWidth="700";
 var evtCategoryData;     //Can be set in the enclosing page
 var recurrenceRuleData;	//Can be set in the enclosing page
+
+var rrIntervalOpts = {};
+for(j=1;j<51;j++){
+	rrIntervalOpts[j]=j;
+}
+var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY'};
+
+function RRule() {
+	var rruleID;
+	var rFrequencyCode;
+	var rrUntil;
+	var rrCount;
+	var rrInterval;	
+	var eventID;
+}
 
 function closeDialog(id){
 	$('#' + id).dialog("close");
@@ -112,11 +129,99 @@ function createRRule(f) {
 	return id;
 }
 
-function createRRuleAndCloseDiagog(f){
-	var id = createRRule(f);
-	if(!id) return false;
-	closeDialog( RRULE_DIV_ID);
+function createRRuleShow(evt){
+	var divID = RRULE_DIV_ID;
+	var drr = $('#' + divID);
+	if(!drr[0]){
+		$("body").append("<div id='" + divID + "'></div>");
+		drr = $('#' + divID);
+		if(!drr){
+			alert("Could not create div " + divID);
+			return;
+		}
+	}
+	rrule = new RRule();
+	rrule.eventID = evt.eventID;
+	rrule.evtStart = evt.evtStart;
+	rrule.evtEnd = evt.evtEnd;
+
+	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
+	var startFmt = start.format(fmtDateTime);
+	rrule['startFmt'] = startFmt;
+	//setRRuleFields(rrule);
+	
+	var str = getRRuleTemplate();
+	str = supplant(str, rrule);
+	drr.html(str);
+
+	 initRRuleControls(rrule);
+
+
+	$("#btnCreateRRule").show();
+	$("#btnCancelCreateRRule").show();
+
+	drr.dialog({width:'600px'});
+	
 }
+
+function initRRuleControls(rrule){
+
+	setOptions("rFrequencyCode",rruleOpts,rrule.rFrequencyCode);
+	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
+	//$("#rFrequencyCode").val(rrule.rfrequencycode);
+	//$("#rrInterval").val(rrule.rrinterval);
+	$(".datepicker").datepicker();
+	$("#rrCount").change(function(evt){
+		$('#rrUntil').val("");
+		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
+	});
+	$("#rrUntil").change(function(evt){
+		$("#rrCount").val("");
+		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+	
+	});
+	$("input[name='rad_rrUntil']").change(function(evt){
+		var val = $(this).val();
+		if(val == 'date'){
+			$("#rrCount").val("");
+		}
+		else if(val == 'count'){
+			$('#rrUntil').val("");
+		}
+	});
+}
+
+
+function updateRRule(f) {
+	// update a recurrence rule based on form data
+
+	if(!f.rFrequencyCode.value){
+		alert ("The frequency code field cannot be empty");
+		return false;
+	}
+	// Send the event to the back end
+	var url = "/cal?pAction=rruleUpdate";
+	f.action = url;
+	var event;
+	var id;
+	var fLoad = function(data) {
+		event = data;
+		// Times are passed through json as millisecond values.
+		// These need to be converted into actual date objects.
+		event.start = new Date(event.start);
+		event.end = new Date(event.end);
+ 		// render in the calendar
+		calendar.fullCalendar('renderEvent', event, false // make the event
+															// not "stick"
+		);
+		id = event.id;
+	}
+	// var jqID = "#" + f.id;
+	// $.post(url, $(jqID).serialize(), fLoad);
+	jqSubmit(f, true, fLoad);
+	return id;
+}
+
 
 function createAndEditEvent(f){
 	var id = createFCEvent(f);
@@ -174,8 +279,10 @@ function deleteFCEvent(f){
 }
 
 function deleteRRule(evt){
+	if(!confirm("Delete all recurring events related to this event?")) return false;
 	var url ="/cal?pAction=rruleDelete";
 	url += "&rruleID=" + evt.rruleID;
+	url += "&eventID=" + evt.eventID;
 	
 	var fLoad = function(data){
 		event = evalJSON(data);
@@ -210,6 +317,8 @@ function editCalendarEvent(evt){
 	editFCEvent(evt,null,null,opts);
 }
 
+
+
 function editRRule(evt){
 	var divID = RRULE_DIV_ID;
 	var drr = $('#' + divID);
@@ -222,46 +331,20 @@ function editRRule(evt){
 		}
 	}
 	rrule = getRRule(evt.rruleID);
+	rrule.eventID = evt.eventID;
 
 	if(!rrule) rrule = evt;
 	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
-	var startFmt = start.format(fmtDateTime);
+	var startFmt = start.format(fmtFC);
 	rrule['startFmt'] = startFmt;
 	//setRRuleFields(rrule);
 	
 	var str = getRRuleTemplate();
 	str = supplant(str, rrule);
 	drr.html(str);
-	var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY'};
-	var intervalOpts = {};
-	for(j=1;j<51;j++){
-		intervalOpts[j]=j;
-	}
-	setOptions("rFrequencyCode",rruleOpts);
-	setOptions("rrInterval",intervalOpts);
-	//$("#rFrequencyCode").val(rrule.rfrequencycode);
-	//$("#rrInterval").val(rrule.rrinterval);
-	$(".datepicker").datepicker();
-	$("#rrCount").change(function(evt){
-		$('#rrUntil').val("");
-		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
-	});
-	$("#rrUntil").change(function(evt){
-		$("#rrCount").val("");
-		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+	initRRuleControls(rrule);
 
-	});
-	$("input[name='rad_rrUntil']").change(function(evt){
-		var val = $(this).val();
-		if(val == 'date'){
-			$("#rrCount").val("");
-		}
-		else if(val == 'count'){
-			$('#rrUntil').val("");
-		}
-	})
-
-	$("#btnCreateRRule").show();
+	$("#btnUpdateRRule").show();
 	$("#btnCancelCreateRRule").show();
 
 	drr.dialog({width:'600px'});
@@ -324,7 +407,7 @@ function editFCEvent(evt, jsEvt, view, opts) {
 		});
 		$('#flgRepeating').change(function(event){
 			if(this.checked){
-				editRRule(evt);
+				createRRuleShow(evt);
 				$("#editRepeat").show();
 			}
 			else{
@@ -392,19 +475,7 @@ function formatDate(myDate) {
 			.getFullYear());
 }
 
-function getRRule(rruleID){
-	var rrule = null;
-	if(!rruleID) return null;
-	var url = "/cal?pAction=GetRecords";
-	url += "&q=/CAL/Calendar/sql/GetRRule.sql";
-	
-	url += "&rruleID=" + rruleID;
-	var fLoad = function(data){
-		rrule = data;
-	}
-	jqGet(url,true,fLoad);
-	return rrule;
-}
+
 
 function getCalendarEventRecord(evt){
 	//Get the full CalendarEvent record
@@ -486,10 +557,34 @@ function getEditTemplate(eventID){
 	return editTemplate;
 }
 
+function getRRule(rruleID){
+	var rrule = new RRule();
+	if(!rruleID) return null;
+	var url = "/cal?pAction=GetRecords";
+	//url += "&q=/CAL/Calendar/sql/GetRRule.sql";
+	url += "&q=/CAL/Event/sql/RetrieveRRule.sql";
+	
+	url += "&rruleID=" + rruleID;
+	var fLoad = function(data){
+		var rec = data[0];
+		//var mRRUntil = moment(rec.rruntil, fmtFC);
+		var mRRUntil = moment(rec.rruntil,fmtICal);
+		rrUntil = mRRUntil.format(fmtDay);
+
+		rrule.rruleID = rec.rruleid;
+		rrule.rFrequencyCode = rec.rfrequencycode;
+		rrule.rrUntil = rrUntil;
+		rrule.rrCount = rec.rrcount;
+		rrule.rrInterval = rec.rrinterval;
+	}
+	jqGet(url,true,fLoad);
+	return rrule;
+}
+
 function getRRuleTemplate(){
 	if(rruleTemplate) return rruleTemplate;
 	var ts = new Date().getTime();
-	var url=DIR_FC +"/evtmgr/CreateRRule.htm";
+	var url=DIR_FC +"/evtmgr/" + RRULE_Template;
 	url += "?" + ts;
 
 	var tmp;
