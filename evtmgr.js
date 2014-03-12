@@ -31,7 +31,7 @@ var rrIntervalOpts = {};
 for(j=1;j<51;j++){
 	rrIntervalOpts[j]=j;
 }
-var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY'};
+var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY','Monthly':'MONTHLY'};
 
 function RRule() {
 	var rruleID;
@@ -99,6 +99,66 @@ function createFCEventAndCloseDialog(f){
 	closeDialog(DIV_ID_C);
 }
 
+function createFCEventShow(startDate, endDate, allDay) {
+
+	var opts = new Array();
+	opts.title = "Create Event";
+	// BD pump up height to fit everything - isn't there a better (responsive) way?
+	opts.height = 560;
+
+	var divID = DIV_ID_C;
+	var formID = "frmCreateEvent";
+
+	var dCreate = $('#' + divID);
+	if(!dCreate[0]){
+		$("body").append("<div id='" + divID + "'></div>");
+		dCreate = $('#' + divID);
+		if(!dCreate){
+			alert("Could not create div " + divID);
+			return;
+		}
+	}
+	var start = moment(startDate);
+	var end = moment(endDate);
+	//make sure the event is at least 1/2 hour long if not an allDay
+	if(!allDay){
+		var diff = start.diff(end,'minutes');
+		if(diff<30) end.add('m',30);
+	}
+	
+	var evt = {
+			start : start.toDate(),
+			end : end.toDate(),
+			allDay : allDay,
+			calendarid: calendarID
+		}
+
+	setEvtFields(evt);
+	evt.formID = formID;
+	
+	var str = getCreateTemplate();
+	str = supplant(str, evt);
+	dCreate.html(str);
+	
+	var fLoadCreate = function(){
+		/*
+		 * Need a retry loop in case the dialog html is not yet loaded in the dom
+		 * !@#$#QWER IE
+		 */
+		var f = $("#" + formID)[0];
+		if(! f.evtStartDate){
+			setTimeout(fLoadCreate, 250);
+			return;
+		}
+
+		initEventControls(evt);
+		setButtons('CREATE');
+
+	}
+	opts.open = fLoadCreate;
+	showDialog(divID,opts);
+}
+
 function createRRule(f) {
 	// create a recurrence rule based on form data
 
@@ -162,6 +222,42 @@ function createRRuleShow(evt){
 
 	drr.dialog({width:'600px'});
 	
+}
+
+function initEventControls(evt,f){
+	//Setup the date fields
+	//setDateTimeField(f);
+	$(".datepicker").datepicker();
+	$(".timepicker").timepicker({scrollDefaultTime:'09:00'});
+	$("#evtStartDate").change(setDateRange);
+	$("#evtStartTime").change(setTimeRange);
+	$('#flgAllDay').change(function(){
+		setAllDayFields(this.checked);
+	});
+	$('#flgRepeating').change(function(event){
+		if(this.checked){
+			createRRuleShow(evt);
+			$("#editRepeat").show();
+		}
+		else{
+			deleteRRule(evt);
+			$("#editRepeat").hide();
+		}
+	});	
+	$("#editRepeat").click(function(event){
+		editRRule(evt);
+	});
+	if(evt.flgRepeating){
+		$('#flgRepeating').prop('checked', true);
+		$("#editRepeat").show();
+	}
+	
+	setAllDayFields(evt.allDay);	
+	//Load the event category select
+	setEvtCategorySelect(evt);
+	//Load the recurrenc rules
+	setEvtRecurrenceSelect(evt);
+
 }
 
 function initRRuleControls(rrule){
@@ -246,7 +342,7 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  flgFirstClick=true;
 	  //if(view.name != 'month')  return;
 	  if(view.name == 'basicDay'){
-		  showCreateFCEvent(date,date,allDay);
+		  createFCEventShow(date,date,allDay);
 	  }
 	  if(view.name == 'agendaWeek'){
 		  if(allDay){
@@ -255,10 +351,10 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  }
 	  if(view.name == 'agendaDay'){
 		  //if(! allDay) return;
-		  showCreateFCEvent(date,date,allDay);  
+		  createFCEventShow(date,date,allDay);  
 	  }
 	  else if(view.name == 'month'){
-		  showCreateFCEvent(date,date,allDay);
+		  createFCEventShow(date,date,allDay);
 		
 		  //This would pop the agendaDay view
 		  //calendar.fullCalendar('changeView', 'agendaDay')
@@ -397,37 +493,9 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			setTimeout(fLoadEdit, 250);
 			return;
 		}
+		initEventControls(evt);
 		setButtons('EDIT');
-		$(".datepicker").datepicker();
-		$(".timepicker").timepicker({scrollDefaultTime:'09:00'});
-		$("#evtStartDate").change(setDateRange);
-		$("#evtStartTime").change(setTimeRange);
-		$('#flgAllDay').change(function(){
-			setAllDayFields(this.checked);
-		});
-		$('#flgRepeating').change(function(event){
-			if(this.checked){
-				createRRuleShow(evt);
-				$("#editRepeat").show();
-			}
-			else{
-				deleteRRule(evt);
-				$("#editRepeat").hide();
-			}
-		});	
-		$("#editRepeat").click(function(event){
-			editRRule(evt);
-		});
-		if(evt.flgRepeating){
-			$('#flgRepeating').prop('checked', true);
-			$("#editRepeat").show();
-		}
-		
-		setAllDayFields(evt.allDay);	
-		//Load the event category select
-		setEvtCategorySelect(evt);
-		//Load the recurrenc rules
-		setEvtRecurrenceSelect(evt);
+
 		return false;
 	}
 	opts.open = fLoadEdit;
@@ -568,9 +636,11 @@ function getRRule(rruleID){
 	var fLoad = function(data){
 		var rec = data[0];
 		//var mRRUntil = moment(rec.rruntil, fmtFC);
-		var mRRUntil = moment(rec.rruntil,fmtICal);
-		rrUntil = mRRUntil.format(fmtDay);
-
+		var rrUntil = null;
+		if(rec.rruntil){
+			var mRRUntil = moment(rec.rruntil,fmtICal);
+			rrUntil = mRRUntil.format(fmtDay);
+		}
 		rrule.rruleID = rec.rruleid;
 		rrule.rFrequencyCode = rec.rfrequencycode;
 		rrule.rrUntil = rrUntil;
@@ -590,10 +660,15 @@ function getRRuleTemplate(){
 	var tmp;
 	var fLoad = function(data){
 		tmp = data;
-		createTemplate = tmp;
+		rruleTemplate = tmp;
 	}
 	jqGet(url,true,fLoad,null,'text');
-	return createTemplate;
+	return rruleTemplate;
+}
+
+function reloadCalendar(){
+	//To refetch events
+	calendar.fullCalendar('refetchEvents');  
 }
 
 function resizeHdlr( event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
@@ -619,7 +694,7 @@ function selectHdlr(start, end, allDay) {
 		// Event edit window already displayed. Close it now
 		closeEventEdit();
 	} else {
-		showCreateFCEvent(start, end, allDay);
+		createFCEventShow(start, end, allDay);
 		calendar.fullCalendar('unselect');
 	}
 }
@@ -799,76 +874,6 @@ function setButtons(mode){
 	}
 }
 
-function showCreateFCEvent(startDate, endDate, allDay) {
-
-	var opts = new Array();
-	opts.title = "Create Event";
-	// BD pump up height to fit everything - isn't there a better (responsive) way?
-	opts.height = 560;
-
-	var divID = DIV_ID_C;
-	var formID = "frmCreateEvent";
-
-	var dCreate = $('#' + divID);
-	if(!dCreate[0]){
-		$("body").append("<div id='" + divID + "'></div>");
-		dCreate = $('#' + divID);
-		if(!dCreate){
-			alert("Could not create div " + divID);
-			return;
-		}
-	}
-	var start = moment(startDate);
-	var end = moment(endDate);
-	//make sure the event is at least 1/2 hour long if not an allDay
-	if(!allDay){
-		var diff = start.diff(end,'minutes');
-		if(diff<30) end.add('m',30);
-	}
-	
-	var evt = {
-			start : start.toDate(),
-			end : end.toDate(),
-			allDay : allDay,
-			calendarid: calendarID
-		}
-
-	setEvtFields(evt);
-	evt.formID = formID;
-	
-	var str = getCreateTemplate();
-	str = supplant(str, evt);
-	dCreate.html(str);
-	
-	var fLoadCreate = function(){
-		/*
-		 * Need a retry loop in case the dialog html is not yet loaded in the dom
-		 * !@#$#QWER IE
-		 */
-		if(! $("#" + formID)[0].evtStartDate){
-			setTimeout(fLoadCreate, 250);
-			return;
-		}
-		//Setup the date fields
-		var f = $("#" + formID)[0];
-		//setDateTimeField(f);
-		$(".datepicker").datepicker();
-		$(".timepicker").timepicker();
-		//$('#' + formID +' input.timepicker').change(function(){setDateTimeField(this);});
-		//$('#' + formID + ' input.datepicker').change(function(){setDateTimeField(this);});
-
-		$('#flgAllDay').change(function(){
-			setAllDayFields(this.checked);
-		});
-		setAllDayFields(evt.allDay);
-		setButtons('CREATE');	
-		setEvtCategorySelect(evt);
-		//Load the recurrence rules
-		setEvtRecurrenceSelect(evt);
-	}
-	opts.open = fLoadCreate;
-	showDialog(divID,opts);
-}
 
 
 function showDiv(id) {
@@ -1020,5 +1025,6 @@ function updateEventTimes(evt){
 function updateAndCloseEvent(f){
 	updateFCEventForm(f);
 	closeEventEdit();
+	calendar.fullCalendar('refetchEvents');  //To refetch in case of repeating events
 	return false;
 }

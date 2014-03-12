@@ -8,6 +8,8 @@ label{color:#4d4d4d; display:table-cell;  margin:0;  font-weight:normal; font-si
 .evtCheckbox{display:block; padding:5px 0 5px 25px; text-align:left; float:left; }
 .ui-widget input {color:#4d4d4d !important; font-size:12px !important;}
 .ui-widget select{font-size:.7em}
+.datepicker input{width:100px;}
+input .datepicker{width:100px;}
 .timepicker input{width:130px}
 .evtField textarea{color:#4d4d4d; font-weight:normal; font-size:12px; }
 

@@ -105,10 +105,9 @@
   
 <div style="display:block; margin-top:1em"></div>
 <div class="fldRow">
-  <div class="evtLabel"></div>
   <div class="evtField">
     <button id='btnUpdateEvt' class="evtButton" style="display:none;" onclick="updateAndCloseEvent(this.form);return false;">Update</button>
-    <button id='btnDeleteEvt' class="evtButton" style="display:none;" onclick="deleteFCEvent(this.form);closeEventEdit();return false;">Delete</button>
+    <button id='btnDeleteEvt' class="evtButton" style="display:none;" onclick="deleteFCEvent(this.form);closeEventEdit();reloadCalendar();return false;">Delete</button>
     <button id='btnCancelEditEvt' class="evtButton" style="display:none;" onclick="closeEventEdit();return false;">Cancel</button>
   </div>
 </div>
