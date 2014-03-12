@@ -472,6 +472,13 @@ function editFCEvent(evt, jsEvt, view, opts) {
 	var id = evt.id;
 	evt = getCalendarEventRecord(evt);
 	setEvtFields(evt);
+	/*if(evt.flgRepeating && !evt.flgFirstEvt){
+		if(!confirm("This is a repeating event. Do you want to update all events in this series? If not, you need to first make this into a separate event, then you can edit this event's properties.")){
+			return false;
+		}			
+	}
+	*/
+
 	evt.formID = formID;
 	
 	var str = getEditTemplate();
@@ -548,7 +555,7 @@ function formatDate(myDate) {
 function getCalendarEventRecord(evt){
 	//Get the full CalendarEvent record
 	//Returns an event object with all the FullCalendar fields + all the app specific fields
-	var eventID = evt.id;
+	var eventID = evt.eventid;
 	var url = "/cal?pAction=eventRetrieve&eventID=" + eventID;
 	var evtC;
 	var val;
@@ -666,9 +673,15 @@ function getRRuleTemplate(){
 	return rruleTemplate;
 }
 
-function reloadCalendar(){
+function reloadCalendar(flgPageReload){
 	//To refetch events
-	calendar.fullCalendar('refetchEvents');  
+	if(flgPageReload){
+		//do a full refresh
+		document.location = document.location
+	}
+	else{
+		calendar.fullCalendar('refetchEvents');  
+	}
 }
 
 function resizeHdlr( event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
@@ -791,26 +804,58 @@ function setEvtCategorySelect(evt){
 }
 
 function setEvtFields(evt){
+	/*
+	 * If this is a standard record, evt.start and evt.startdate will line up.
+	 * If not, if this is part of a recurring event sequence, evt.start is the start of the current instance, and evt.startdate is 
+	 * the date of the original entry in the sequence.
+	 *
+	 */
+	var flgRepeating = evt.rruleid != null;
+	var flgFirstEvt = false;
+	var evtIDX = 0;
+	var repeatID = null;
+	if(flgRepeating){
+		repeatID = evt.repeatID;  //synthetic, looks like 123234.0, 123234.1, etc.
+		var n = repeatID + "";
+		evtIDX = n.split(".")[1];
+		//doh!  following returns 0.0993993912919 etc
+		//evtIDX = repeatID - (Math.floor(repeatID));
+		if(evtIDX == 0) flgFirstEvt = true;
+	}
+	var startDate, endDate;
+	var startDisplay,endDisplay,startString,endString;
+	
 	var startDate = moment(evt.start);
 	var endDate = moment(evt.end);
 	var startDisplay, endDisplay;
 	var startString,endString;
+
+	//Adjust for repeating events
+	evt.flgRepeating = flgRepeating;
+	evt.flgFirstEvt = flgFirstEvt;
+	if(flgRepeating && !flgFirstEvt){
+		startDate = moment(evt._start);
+		if(evt._end) endDate = moment(evt._end);
+		else endDate = startDate;
+	}
+	
 	startDisplay = startDate.format(fmtDisplay);
 	startString = startDate.format(fmtDateTime);
 	evt.startString = startString;
 	evt.startDisplay = startDisplay;
-	evt.starttime = startDate.format(fmtTime);
-	evt.startdate = startDate.format(fmtDay);
+	evt.startTime = startDate.format(fmtTime);
+	evt.startDate = startDate.format(fmtDay);
 
 	if(endDate){
 		endString = endDate.format(fmtDateTime);
 		endDisplay = endDate.format(fmtDisplay);
-		evt.endtime = endDate.format(fmtTime);
-		evt.enddate = endDate.format(fmtDay);
+		evt.endTime = endDate.format(fmtTime);
+		evt.endDate = endDate.format(fmtDay);
 		evt.endString = endString;
 		evt.endDisplay = endDisplay;
 	}
 	evt.day = getDay(evt.start);
+
 }
 
 function setDateRange(evtObj){
@@ -971,13 +1016,41 @@ function getHeightWidth(id) {
 }
 
 
-function updateFCEventForm(f,evt){
+
+
+function updateEventTimes(evt){
+	var start = moment(evt.start);
+	var end = moment(evt.end);
+	if(!end) end = start;
+	var url = "/cal?pAction=eventUpdate";
+	url += "&eventID=" + evt.id;
+	url += "&calendarID=" + evt.calendarid;
+	url +="&evtStartString=" + start.format(fmtDateTime);
+	url +="&evtEndString=" + end.format(fmtDateTime);
+	url +="&flgUpdate=true";
+	jqGet(url,false,null);
+}
+
+function updateAndCloseEvent(f){
+	updateFCEvent(f);
+	closeEventEdit();
+	reloadCalendar();  //To refetch in case of repeating events
+	return false;
+}
+
+function updateFCEvent(f,evt){
 	if(!f){
 		editFCEvent(evt);
 	}
+	if(!evt) evt = globEvent;
+	if(evt.flgRepeating && !evt.flgFirstEvt){
+		if(!confirm("This is a repeating event. Do you want to update all events in this series? If not, you need to first make this into a separate event, then you can edit this event's properties.")){
+			return false;
+		}			
+	}
 	//Update evtStart and evtEnd
 	setDateTimeField(f);
-	if(!evt) evt = globEvent;
+
 	var evtObj = f.evtObject;
 	if(!evtObj){
 		evtObj = {id:'evtObject'};
@@ -1006,25 +1079,5 @@ function updateFCEventForm(f,evt){
 		//calendar.fullCalendar('renderEvent', event, true );	
 		};
 	xhrSubmit(f,false,fLoad);
-	
-}
-
-function updateEventTimes(evt){
-	var start = moment(evt.start);
-	var end = moment(evt.end);
-	if(!end) end = start;
-	var url = "/cal?pAction=eventUpdate";
-	url += "&eventID=" + evt.id;
-	url += "&calendarID=" + evt.calendarid;
-	url +="&evtStartString=" + start.format(fmtDateTime);
-	url +="&evtEndString=" + end.format(fmtDateTime);
-	url +="&flgUpdate=true";
-	jqGet(url,false,null);
-}
-
-function updateAndCloseEvent(f){
-	updateFCEventForm(f);
-	closeEventEdit();
-	calendar.fullCalendar('refetchEvents');  //To refetch in case of repeating events
-	return false;
+	return evt;
 }
