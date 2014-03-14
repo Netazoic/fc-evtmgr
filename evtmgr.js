@@ -269,6 +269,7 @@ function initRRuleControls(rrule){
 	$(".datepicker").datepicker();
 	$("#rrCount").change(function(evt){
 		$('#rrUntil').val("");
+		$("#rrUntil").attr("disabled",true);
 		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
 	});
 	$("#rrUntil").change(function(evt){
@@ -279,12 +280,26 @@ function initRRuleControls(rrule){
 	$("input[name='rad_rrUntil']").change(function(evt){
 		var val = $(this).val();
 		if(val == 'date'){
-			$("#rrCount").val("");
+			$("#rrCount").val('');
+			$("#rrCount").attr("value",null);
+			$("#rrCount").attr("disabled",true);
+			$('#rrUntil').removeAttr("disabled");
 		}
 		else if(val == 'count'){
 			$('#rrUntil').val("");
+			$("#rrUntil").attr("value",null);
+			$("#rrUntil").attr("disabled",true);
+			$('#rrCount').removeAttr("disabled");
 		}
 	});
+	if(rrule.rrCount){
+		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
+		$('#rrUntil').attr("disabled","disabled");
+	}
+	else if(rrule.rrUntil){
+		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+		$('#rrCount').attr("disabled",true);
+	}
 }
 
 
@@ -1021,14 +1036,17 @@ function getHeightWidth(id) {
 function updateEventTimes(evt){
 	var start = moment(evt.start);
 	var end = moment(evt.end);
+	var evtAllDay = evt.allDay?1:0;
 	if(!end) end = start;
 	var url = "/cal?pAction=eventUpdate";
 	url += "&eventID=" + evt.id;
 	url += "&calendarID=" + evt.calendarid;
 	url +="&evtStartString=" + start.format(fmtDateTime);
 	url +="&evtEndString=" + end.format(fmtDateTime);
+	url += "&evtAllDay=" + evtAllDay;
 	url +="&flgUpdate=true";
 	jqGet(url,false,null);
+	if(evt.flgRepeating) reloadCalendar();
 }
 
 function updateAndCloseEvent(f){
