@@ -7,6 +7,7 @@
 <input type="hidden" name="evtEndString" id="evtEndString" value="{endString}"/>
 <input type="hidden" name="dateTimeString" id="dateTimeString" value="{dateTimeString}"/>
 <input type="hidden" name="eventID" id="eventID" value="{eventid}"/>
+<input type="hidden" name="repeatID" id="repeatID" value="{repeatID}"/>
 <input type="hidden" name="calendarID" id="calendarID" value="{calendarid}"/>
 <input type="hidden" name="flgUpdate" id="flgUpdate" value="true"/>
 <object name="evtObject" id="evtObject" style="display;none;">
@@ -23,6 +24,7 @@
 	<div class="evtField"><input name="evtStartDate" id="evtStartDate" class="datepicker" value="{startDate}"/>
 	
       <span class="timepickerw" ><input class="timepicker time" id="evtStartTime" name="evtStartTime" value="{startTime}"/></span>
+      
      </div>
 </div>
 
@@ -36,8 +38,8 @@
 
 <div class="fldRow">
     <div class="evtLabel">All day event:</div>
-    <div class="evtCheckbox"><input type="CheckBox"  name="evtAllDay" id="flgAllDay" value="1" /></div>
-    <div class="evtLabel2">Repeats:</div>
+    <div class="evtCheckbox"><input type="CheckBox"  name="evtAllDay" id="evtAllDay" value="1" /></div>
+    <div class="evtLabel2">Repeats: <img id="imgRecursionInfo" src="/images/help.gif" style="display:none;"/></div>
     <div class="evtCheckbox"><input type="checkbox" id="flgRepeating" name="flgRepeating" value="1"> <input type="button" id="editRepeat" value="edit" style="display:none;"/></div>
 </div>
 
@@ -108,6 +110,7 @@
   <div class="evtField">
     <button id='btnUpdateEvt' class="evtButton" style="display:none;" onclick="updateAndCloseEvent(this.form);return false;">Update</button>
     <button id='btnDeleteEvt' class="evtButton" style="display:none;" onclick="deleteFCEvent(this.form);closeEventEdit();reloadCalendar();return false;">Delete</button>
+    <button id='btnRemoveEvtFromSeries' class="evtButton" style="display:none;" title="Remove event from repeating series" onclick="removeFCEventFromSeries(this.form);closeEventEdit();reloadCalendar();return false;">Remove</button>
     <button id='btnCancelEditEvt' class="evtButton" style="display:none;" onclick="closeEventEdit();return false;">Cancel</button>
   </div>
 </div>

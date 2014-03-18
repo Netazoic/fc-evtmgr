@@ -33,6 +33,20 @@ for(j=1;j<51;j++){
 }
 var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY','Monthly':'MONTHLY'};
 
+function Evt(){
+	var eventID;
+	var repeatID;
+	var start;
+	var end;
+	var startDate;
+	var startTime;
+	var endDate;
+	var endTime;
+	var allDay;
+	var flgRepeating;
+	var flgFirstEvt;
+}
+
 function RRule() {
 	var rruleID;
 	var rFrequencyCode;
@@ -76,7 +90,7 @@ function createFCEvent(f) {
 	var event;
 	var id;
 	var fLoad = function(data) {
-		event = evalJSON(data);
+		event = data;
 		// Times are passed through json as millisecond values.
 		// These need to be converted into actual date objects.
 		event.start = new Date(event.start);
@@ -89,7 +103,7 @@ function createFCEvent(f) {
 	}
 	// var jqID = "#" + f.id;
 	// $.post(url, $(jqID).serialize(), fLoad);
-	xhrSubmit(f, true, fLoad);
+	jqSubmit(f, true, fLoad);
 	return id;
 }
 
@@ -220,87 +234,10 @@ function createRRuleShow(evt){
 	$("#btnCreateRRule").show();
 	$("#btnCancelCreateRRule").show();
 
-	drr.dialog({width:'600px'});
+	drr.dialog({title:'Edit Recurring Events',width:'600px'});
 	
 }
 
-function initEventControls(evt,f){
-	//Setup the date fields
-	//setDateTimeField(f);
-	$(".datepicker").datepicker();
-	$(".timepicker").timepicker({scrollDefaultTime:'09:00'});
-	$("#evtStartDate").change(setDateRange);
-	$("#evtStartTime").change(setTimeRange);
-	$('#flgAllDay').change(function(){
-		setAllDayFields(this.checked);
-	});
-	$('#flgRepeating').change(function(event){
-		if(this.checked){
-			createRRuleShow(evt);
-			$("#editRepeat").show();
-		}
-		else{
-			deleteRRule(evt);
-			$("#editRepeat").hide();
-		}
-	});	
-	$("#editRepeat").click(function(event){
-		editRRule(evt);
-	});
-	if(evt.flgRepeating){
-		$('#flgRepeating').prop('checked', true);
-		$("#editRepeat").show();
-	}
-	
-	setAllDayFields(evt.allDay);	
-	//Load the event category select
-	setEvtCategorySelect(evt);
-	//Load the recurrenc rules
-	setEvtRecurrenceSelect(evt);
-
-}
-
-function initRRuleControls(rrule){
-
-	setOptions("rFrequencyCode",rruleOpts,rrule.rFrequencyCode);
-	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
-	//$("#rFrequencyCode").val(rrule.rfrequencycode);
-	//$("#rrInterval").val(rrule.rrinterval);
-	$(".datepicker").datepicker();
-	$("#rrCount").change(function(evt){
-		$('#rrUntil').val("");
-		$("#rrUntil").attr("disabled",true);
-		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
-	});
-	$("#rrUntil").change(function(evt){
-		$("#rrCount").val("");
-		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
-	
-	});
-	$("input[name='rad_rrUntil']").change(function(evt){
-		var val = $(this).val();
-		if(val == 'date'){
-			$("#rrCount").val('');
-			$("#rrCount").attr("value",null);
-			$("#rrCount").attr("disabled",true);
-			$('#rrUntil').removeAttr("disabled");
-		}
-		else if(val == 'count'){
-			$('#rrUntil').val("");
-			$("#rrUntil").attr("value",null);
-			$("#rrUntil").attr("disabled",true);
-			$('#rrCount').removeAttr("disabled");
-		}
-	});
-	if(rrule.rrCount){
-		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
-		$('#rrUntil').attr("disabled","disabled");
-	}
-	else if(rrule.rrUntil){
-		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
-		$('#rrCount').attr("disabled",true);
-	}
-}
 
 
 function updateRRule(f) {
@@ -413,6 +350,11 @@ function dropHdlr(event,dayDelta,minuteDelta,allDay,revertFunc) {
 	//calendar.fullCalendar('updateEvent',event);
     //editFCEvent(event);
     updateEventTimes(event);
+	if(event.flgRepeating){
+		calendar.fullCalendar('updateEvent',event);
+		reloadCalendar();
+	}
+
 }
 
 function editCalendarEvent(evt){
@@ -458,7 +400,7 @@ function editRRule(evt){
 	$("#btnUpdateRRule").show();
 	$("#btnCancelCreateRRule").show();
 
-	drr.dialog({width:'600px'});
+	drr.dialog({title:'Edit Recurring Events',width:'600px'});
 	
 }
 
@@ -516,7 +458,7 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			return;
 		}
 		initEventControls(evt);
-		setButtons('EDIT');
+		setButtons('EDIT',evt);
 
 		return false;
 	}
@@ -532,7 +474,7 @@ function setAllDayFields(flg){
 	if(flg){
 		$('.timepicker').hide();
 		//$('#divEvtEndDate').hide();
-		$('#flgAllDay').prop('checked', true);
+		$('#evtAllDay').prop('checked', true);
 	}
 	else{
 		$('.timepicker').show();
@@ -688,15 +630,117 @@ function getRRuleTemplate(){
 	return rruleTemplate;
 }
 
-function reloadCalendar(flgPageReload){
+function initEventControls(evt,f){
+	//Setup the date fields
+	//setDateTimeField(f);
+	$(".datepicker").datepicker();
+	$(".timepicker").timepicker({scrollDefaultTime:'09:00'});
+	$("#evtStartDate").change(setDateRange);
+	$("#evtStartTime").change(setTimeRange);
+	$('#evtAllDay').change(function(){
+		setAllDayFields(this.checked);
+	});
+	$('#flgRepeating').change(function(event){
+		if(this.checked){
+			createRRuleShow(evt);
+			$("#editRepeat").show();
+		}
+		else{
+			deleteRRule(evt);
+			$("#editRepeat").hide();
+		}
+	});	
+	$("#editRepeat").click(function(event){
+		editRRule(evt);
+	});
+	if(evt.flgRepeating){
+		$('#flgRepeating').prop('checked', true);
+		$("#editRepeat").show();
+	}
+	
+	setAllDayFields(evt.allDay);	
+	//Load the event category select
+	setEvtCategorySelect(evt);
+	//Load the recurrenc rules
+	setEvtRecurrenceSelect(evt);
+	//Adjust page for repeated event
+	if(evt.flgRepeating && !evt.flgFirstEvt){
+		var recursionInfo = "This event is part of a repeating event. You cannot edit the start and end dates for this event here.";
+			recursionInfo += "\r\nIf you would like to remove this particular date, or adjust the start and end dates for this particular event";
+			recursionInfo += " you must first remove this event from the series using the Remove Event from Series button below.";
+		$("#imgRecursionInfo").toggle();
+		$("#imgRecursionInfo").attr("title",recursionInfo);
+	}
+	if(evt.flgRepeating && !evt.flgFirstEvt){
+		$("#evtStartDate").attr("disabled","true");
+		$("#evtEndDate").attr("disabled","true");
+		$("#evtAllDay").attr("disabled","true");
+	}
+	
+
+}
+
+function initRRuleControls(rrule){
+
+	setOptions("rFrequencyCode",rruleOpts,rrule.rFrequencyCode);
+	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
+	//$("#rFrequencyCode").val(rrule.rfrequencycode);
+	//$("#rrInterval").val(rrule.rrinterval);
+	$(".datepicker").datepicker();
+	$("#rrCount").change(function(evt){
+		$('#rrUntil').val("");
+		$("#rrUntil").attr("disabled",true);
+		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
+	});
+	$("#rrUntil").change(function(evt){
+		$("#rrCount").val("");
+		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+	
+	});
+	$("input[name='rad_rrUntil']").change(function(evt){
+		var val = $(this).val();
+		if(val == 'date'){
+			$("#rrCount").val('');
+			$("#rrCount").attr("value",null);
+			$("#rrCount").attr("disabled",true);
+			$('#rrUntil').removeAttr("disabled");
+		}
+		else if(val == 'count'){
+			$('#rrUntil').val("");
+			$("#rrUntil").attr("value",null);
+			$("#rrUntil").attr("disabled",true);
+			$('#rrCount').removeAttr("disabled");
+		}
+	});
+	if(rrule.rrCount){
+		$("input[name='rad_rrUntil'][value='count']").prop("checked",true);
+		$('#rrUntil').attr("disabled","disabled");
+	}
+	else if(rrule.rrUntil){
+		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
+		$('#rrCount').attr("disabled",true);
+	}
+}
+
+
+function reloadCalendar(){
 	//To refetch events
-	if(flgPageReload){
-		//do a full refresh
-		document.location = document.location
-	}
-	else{
+	    calendar.fullCalendar('removeEvents');
 		calendar.fullCalendar('refetchEvents');  
+}
+
+
+function refreshPage(){
+	document.location = document.location;
+}
+
+function removeFCEventFromSeries(f){
+	var url="cal?pAction=eventRemoveFromSeries";
+	f.action=url;
+	var fLoad = function(data){
+		reloadCalendar();
 	}
+	jqSubmit(f,true,fLoad);
 }
 
 function resizeHdlr( event, dayDelta, minuteDelta, revertFunc, jsEvent, ui, view) {
@@ -921,7 +965,7 @@ function setDateTimeField(f){
 	f.dateTimeString.value = dateStart+ " " + timeStart + "-" + dateEnd + " " + timeEnd;
 }
 
-function setButtons(mode){
+function setButtons(mode,evt){
 
 	$(".evtButton").hide();
 	if(mode == 'CREATE'){
@@ -930,7 +974,10 @@ function setButtons(mode){
 	}else{
 		$('#btnUpdateEvt').show();
 		$('#btnDeleteEvt').show();
-		$('#btnCancelEditEvt').show();	
+		$('#btnCancelEditEvt').show();
+		if(evt.flgRepeating && !evt.flgFirstEvt){
+			$('#btnRemoveEvtFromSeries').show();
+		}
 	}
 }
 
@@ -1046,7 +1093,6 @@ function updateEventTimes(evt){
 	url += "&evtAllDay=" + evtAllDay;
 	url +="&flgUpdate=true";
 	jqGet(url,false,null);
-	if(evt.flgRepeating) reloadCalendar();
 }
 
 function updateAndCloseEvent(f){
@@ -1062,9 +1108,28 @@ function updateFCEvent(f,evt){
 	}
 	if(!evt) evt = globEvent;
 	if(evt.flgRepeating && !evt.flgFirstEvt){
-		if(!confirm("This is a repeating event. Do you want to update all events in this series? If not, you need to first make this into a separate event, then you can edit this event's properties.")){
-			return false;
-		}			
+		//if(!confirm("This is a repeating event. Do you want to update all events in this series? If not, you need to first make this into a separate event, then you can edit this event's properties.")){
+		//	return false;
+		//}	
+		
+		//We do not want to update dates and times for a repeating event (unless the repeating event is being split into sub-groups)
+		//Retrieve the dates and times from the original event in the series
+		var repeatID = evt.repeatID;
+		var firstEvtID = repeatID.split(".")[0] + ".0";
+		var firstEvt = new Evt();
+		firstEvt  = calendar.fullCalendar('clientEvents',firstEvtID)[0];
+		firstEvt.evtAllDay = firstEvt.allDay;
+		
+		var mmStart = new moment(firstEvt.start);
+		var mmEnd = new moment(firstEvt.end);
+		if(!mmEnd.format) mmEnd = new moment(firstEvt.start);
+		
+		f.evtStartDate.value = mmStart.format(fmtDay);  //format as date
+		f.evtStartTime.value = mmStart.format(fmtTime); //format as time
+		f.evtEndDate.value = mmEnd.format(fmtDay);
+		f.evtEndTime.value = mmEnd.format(fmtTime);
+		f.evtAllDay.value = firstEvt.allDay?1:0;
+		f.evtAllDay.disabled = false;
 	}
 	//Update evtStart and evtEnd
 	setDateTimeField(f);
@@ -1082,8 +1147,7 @@ function updateFCEvent(f,evt){
 	f.action=url;
 	//TODO
 	var fLoad = function(data){
-		var event = jQuery.parseJSON(data);
-		//event = evalJSON(data);
+		var event = data;
 		var k,v;
 		for(k in event){
 			v = event[k];
@@ -1096,6 +1160,6 @@ function updateFCEvent(f,evt){
 		calendar.fullCalendar('updateEvent',evt);
 		//calendar.fullCalendar('renderEvent', event, true );	
 		};
-	xhrSubmit(f,false,fLoad);
+	jqSubmit(f,false,fLoad);
 	return evt;
 }
