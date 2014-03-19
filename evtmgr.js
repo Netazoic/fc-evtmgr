@@ -315,13 +315,24 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  }
 	}
 
-function deleteFCEvent(f){
+function deleteFCEvent(f,flgRepeating,flgReload){
+	if(flgRepeating){
+		var msg = "This is a repeating event. If you delete this event, all events in the series will be deleted.";
+		msg += "\r\n Do you really want to delete this entire series?";
+		if(!confirm(msg)) return false;
+	}
 	var url ="/cal?pAction=eventDelete";
 	f.action=url;
 	var fLoad = function(data){
 		event = data;
 		var id = event.id;
-		calendar.fullCalendar('removeEvents', id );	
+		if(flgReload){
+			reloadCalendar();
+		}
+		else{
+			calendar.fullCalendar('removeEvents', id );
+		}
+		closeEventEdit();
 		};
 	jqSubmit(f,false,fLoad);
 }
@@ -421,6 +432,7 @@ function editFCEvent(evt, jsEvt, view, opts) {
 	if(!opts) {
 		opts = {};
 		// BD pump up height to fit everything - isn't there a better (responsive) way?
+		opts.width = 700;
 		opts.height = 560;
 	}
 	opts.title = "Event Details";
@@ -654,6 +666,17 @@ function initEventControls(evt,f){
 	$("#editRepeat").click(function(event){
 		editRRule(evt);
 	});
+	$("#btnRemoveEvtFromSeries").click(function(event){
+		removeFCEventFromSeries(this.form);
+
+		return false;
+	});
+	
+	$("#btnDeleteEvt").click(function(event){
+		deleteFCEvent(this.form);
+		return false;
+	});
+	
 	if(evt.flgRepeating){
 		$('#flgRepeating').prop('checked', true);
 		$("#editRepeat").show();
@@ -665,17 +688,31 @@ function initEventControls(evt,f){
 	//Load the recurrenc rules
 	setEvtRecurrenceSelect(evt);
 	//Adjust page for repeated event
+	if(evt.flgRepeating && evt.flgFirstEvt){
+		$("#btnDeleteEvt").unbind("click");
+		$("#btnDeleteEvt").click(function(event){
+			var flgRepeating = true;
+			var flgReload = true;
+			deleteFCEvent(this.form,flgRepeating,flgReload);
+			return false;
+		});
+	}
+
 	if(evt.flgRepeating && !evt.flgFirstEvt){
 		var recursionInfo = "This event is part of a repeating event. You cannot edit the start and end dates for this event here.";
-			recursionInfo += "\r\nIf you would like to remove this particular date, or adjust the start and end dates for this particular event";
-			recursionInfo += " you must first remove this event from the series using the Remove Event from Series button below.";
+		recursionInfo += "\r\nIf you would like to remove this particular date, or adjust the start and end dates for this particular event";
+		recursionInfo += " you must first remove this event from the series using the Remove button.";
 		$("#imgRecursionInfo").toggle();
 		$("#imgRecursionInfo").attr("title",recursionInfo);
-	}
-	if(evt.flgRepeating && !evt.flgFirstEvt){
 		$("#evtStartDate").attr("disabled","true");
 		$("#evtEndDate").attr("disabled","true");
 		$("#evtAllDay").attr("disabled","true");
+		$("#btnDeleteEvt").unbind("click");
+		$("#btnDeleteEvt").click(function(event){
+			alert("This event is part of a repeating series.  To delete this event you must first remove it from the series using the Remove button.");
+			return false;
+		});
+		
 	}
 	
 
@@ -736,10 +773,12 @@ function refreshPage(){
 }
 
 function removeFCEventFromSeries(f){
+	if(!confirm("Remove this event from the repeated series?")) return false;
 	var url="cal?pAction=eventRemoveFromSeries";
 	f.action=url;
 	var fLoad = function(data){
 		reloadCalendar();
+		closeEventEdit();
 	}
 	jqSubmit(f,true,fLoad);
 }
