@@ -319,7 +319,7 @@ function deleteFCEvent(f){
 	var url ="/cal?pAction=eventDelete";
 	f.action=url;
 	var fLoad = function(data){
-		event = evalJSON(data);
+		event = data;
 		var id = event.id;
 		calendar.fullCalendar('removeEvents', id );	
 		};
@@ -513,6 +513,7 @@ function getCalendarEventRecord(evt){
 	//Get the full CalendarEvent record
 	//Returns an event object with all the FullCalendar fields + all the app specific fields
 	var eventID = evt.eventid;
+	if(!eventID) eventID = evt.id;
 	var url = "/cal?pAction=eventRetrieve&eventID=" + eventID;
 	var evtC;
 	var val;
