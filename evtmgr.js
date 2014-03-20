@@ -521,6 +521,38 @@ function formatDate(myDate) {
 
 
 
+
+
+function getRRule(rruleID){
+	var rrule = new RRule();
+	if(!rruleID) return null;
+	var url = "/cal?pAction=GetRecords";
+	url += "&q=/CAL/Event/sql/RetrieveRRULE.sql";
+	
+	url += "&rruleID=" + rruleID;
+	var fLoad = function(data){
+		var rec = data[0];
+		//var mRRUntil = moment(rec.rruntil, fmtFC);
+		var rrUntil = null;
+		if(rec.rruntil){
+			var mRRUntil = moment(rec.rruntil,fmtICal);
+			rrUntil = mRRUntil.format(fmtDay);
+		}
+		rrule.rruleID = rec.rruleid;
+		rrule.rFrequencyCode = rec.rfrequencycode;
+		rrule.rrUntil = rrUntil;
+		rrule.rrCount = rec.rrcount;
+		rrule.rrInterval = rec.rrinterval;
+	}
+	jqGet(url,true,fLoad);
+	return rrule;
+}
+
+function getDay(myDate) {
+	return (myDate.getMonth() + 1 + "/" + myDate.getDate() + "/" + myDate
+			.getFullYear());
+}
+
 function getCalendarEventRecord(evt){
 	//Get the full CalendarEvent record
 	//Returns an event object with all the FullCalendar fields + all the app specific fields
@@ -551,12 +583,6 @@ function getCalendarEventRecord(evt){
 	}
 	jqGet(url,true,fLoad);
 	return evtC;	
-}
-
-
-function getDay(myDate) {
-	return (myDate.getMonth() + 1 + "/" + myDate.getDate() + "/" + myDate
-			.getFullYear());
 }
 
 function getCreateTemplate(){
@@ -759,6 +785,19 @@ function initRRuleControls(rrule){
 	}
 }
 
+function loadCalendarCategories(evt){
+	//Get the categories defined for calendar
+	var url = "/cal?pAction=GetRecords";
+	url += "&q=/CAL/Calendar/sql/GetCalendarCategories.sql";
+	url += "&calendarID=" + calendarID;
+	var evtC;
+	var val;
+	var fLoad = function(data){
+		var catRecs = data;
+		evtCategoryData = catRecs;
+	}
+	jqGet(url,true,fLoad);
+}
 
 function reloadCalendar(){
 	//To refetch events
@@ -858,6 +897,8 @@ function setEvtRecurrenceSelect(evt){
 
 
 function setEvtCategorySelect(evt){
+	if(!evtCategoryData)loadCalendarCategories();
+	
 	$("#categoryCode").empty()
 	$("#categoryCode").append($("<option></option>").attr("value","").text("-- Select Category --").addClass("select-category"));
 	if(evtCategoryData.length ==0){
