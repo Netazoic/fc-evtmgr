@@ -7,7 +7,7 @@ var editTemplate;
 var createTemplate;
 var rruleTemplate;
 var calendarID;  //Must be set in the parent page
-var DIR_FC="/js/fullcalendar-1.6.2";
+var DIR_FC="/js/fc-evtmgr";
 var DIV_ID="eventEdit";
 var DIV_ID_C="eventCreate";
 var RRULE_DIV_ID="divRRule";
@@ -562,7 +562,7 @@ function getDay(myDate) {
 function getCreateTemplate(){
 	if(createTemplate) return createTemplate;
 	var ts = new Date().getTime();
-	var url=DIR_FC +"/evtmgr/CreateEvent.htm";
+	var url=DIR_FC +"/CreateEvent.htm";
 	url += "?" + ts;
 
 	var tmp;
@@ -578,7 +578,7 @@ function getEditTemplate(eventID){
 	if(editTemplate) return editTemplate;
 	var ts = new Date().getTime();
 	var url;
-	url=DIR_FC +"/evtmgr/EditEvent.htm";
+	url=DIR_FC +"/EditEvent.htm";
 	url += "?_" + ts;
 	/*
 	if(eventID){
@@ -589,7 +589,7 @@ function getEditTemplate(eventID){
 	}
 	else{
 		//The minimalist event editor
-		url=DIR_FC +"/evtmgr/CreateEditEvent.htm";
+		url=DIR_FC +"/CreateEditEvent.htm";
 		url += "?_" + ts;
 
 	}*/
@@ -631,7 +631,7 @@ function getRRule(rruleID){
 function getRRuleTemplate(){
 	if(rruleTemplate) return rruleTemplate;
 	var ts = new Date().getTime();
-	var url=DIR_FC +"/evtmgr/" + RRULE_Template;
+	var url=DIR_FC +"/"+ RRULE_Template;
 	url += "?" + ts;
 
 	var tmp;
