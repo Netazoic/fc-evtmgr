@@ -606,8 +606,7 @@ function getRRule(rruleID){
 	var rrule = new RRule();
 	if(!rruleID) return null;
 	var url = "/cal?pAction=GetRecords";
-	//url += "&q=/CAL/Calendar/sql/GetRRule.sql";
-	url += "&q=/CAL/Event/sql/RetrieveRRule.sql";
+	url += "&q=/CAL/Event/sql/RetrieveRRULE.sql";
 	
 	url += "&rruleID=" + rruleID;
 	var fLoad = function(data){
