@@ -1283,8 +1283,8 @@ function updateFCEvent(f,evt){
 			v = event[k];
 			evt[k] = v;
 		}
-		//evt.start = new Date(event.start);
-		//evt.end = new Date(event.end);
+		evt.start = new Date(event.start);
+		evt.end = new Date(event.end);
 		if(evt.allDay) evt.end = null;
 		// Event styles
 		evt.className = "event" + event.categoryCode;
