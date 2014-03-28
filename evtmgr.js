@@ -173,6 +173,56 @@ function createFCEventShow(startDate, endDate, allDay) {
 	showDialog(divID,opts);
 }
 
+function createFCEventMinimal(startDate,endDate,allDay){
+	var start = moment(startDate);
+	var end = moment(endDate);
+	//make sure the event is at least 1/2 hour long if not an allDay
+	if(!allDay){
+		var diff = start.diff(end,'minutes');
+		if(diff<30) end.add('m',30);
+	}
+	
+	var evt = {
+			start : start.toDate(),
+			end : end.toDate(),
+			allDay : allDay,
+			calendarid: calendarID
+		}
+
+	setEvtFields(evt);
+	var event;
+	var id;
+	var fLoad = function(data) {
+		event = data;
+		// Times are passed through json as millisecond values.
+		// These need to be converted into actual date objects.
+		event.start = new Date(event.start);
+		event.end = new Date(event.end);
+ 		// render in the calendar
+		calendar.fullCalendar('renderEvent', event, false // make the event
+															// not "stick"
+		);
+		id = event.id;
+	}
+	var jsonEvt = $.param(evt);
+	var url = "/cal?pAction=eventCreate";
+	url += "&calendarID=" + calendarID;
+	for (x in evt){
+		url += "&" + x + "=" + evt[x];
+	}
+	url += "&evtStartString=" + evt.startString;
+	url += "&evtEndString=" + evt.endString;
+	url += "&evtAllDay=" + evt.allDay;
+	url += "&evtTitle=" + "Please enter a title";
+
+	//url += "&evt=" + jsonEvt;
+	// var jqID = "#" + f.id;
+	// $.post(url, $(jqID).serialize(), fLoad);
+	jqGet(url, true, fLoad);
+	editFCEvent(event);
+
+}
+
 function createRRule(f) {
 	// create a recurrence rule based on form data
 
@@ -294,7 +344,7 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  flgFirstClick=true;
 	  //if(view.name != 'month')  return;
 	  if(view.name == 'basicDay'){
-		  createFCEventShow(date,date,allDay);
+		  createFCEventMinimal(date,date,allDay);
 	  }
 	  if(view.name == 'agendaWeek'){
 		  if(allDay){
@@ -303,10 +353,10 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  }
 	  if(view.name == 'agendaDay'){
 		  //if(! allDay) return;
-		  createFCEventShow(date,date,allDay);  
+		  createFCEventMinimal(date,date,allDay);  
 	  }
 	  else if(view.name == 'month'){
-		  createFCEventShow(date,date,allDay);
+		  createFCEventMinimal(date,date,allDay);
 		
 		  //This would pop the agendaDay view
 		  //calendar.fullCalendar('changeView', 'agendaDay')
@@ -844,7 +894,7 @@ function selectHdlr(start, end, allDay) {
 		// Event edit window already displayed. Close it now
 		closeEventEdit();
 	} else {
-		createFCEventShow(start, end, allDay);
+		createFCEventMinimal(start, end, allDay);
 		calendar.fullCalendar('unselect');
 	}
 }
