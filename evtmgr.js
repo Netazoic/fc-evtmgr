@@ -31,7 +31,8 @@ var rrIntervalOpts = {};
 for(j=1;j<51;j++){
 	rrIntervalOpts[j]=j;
 }
-var rruleOpts = {'-- select frequency --':'','Daily':'DAILY','Weekly':'WEEKLY','Yearly':'YEARLY','Monthly':'MONTHLY'};
+var freqOpts = {'-- select frequency --':'','Days':'DAILY','Weeks':'WEEKLY','Months':'MONTHLY','Years':'YEARLY'};
+var freqLabel = {'DAILY':'Days','WEEKLY':'Weeks','MONTHLY':'Months','YEARLY':'Years'}
 
 function Evt(){
 	var eventID;
@@ -54,6 +55,12 @@ function RRule() {
 	var rrCount;
 	var rrInterval;	
 	var eventID;
+}
+
+function cancelRRule(){
+	closeDialog( RRULE_DIV_ID);
+	$('#flgRepeating').attr("checked",false);
+	$("#editRepeat").hide();
 }
 
 function closeDialog(id){
@@ -253,6 +260,13 @@ function createRRule(f) {
 	return id;
 }
 
+function createRRuleHdlr(f){
+	var id = createRRule(f);
+	if(!id) return false;
+	closeRRule();
+
+}
+
 function createRRuleShow(evt){
 	var divID = RRULE_DIV_ID;
 	var drr = $('#' + divID);
@@ -270,7 +284,7 @@ function createRRuleShow(evt){
 	rrule.evtEnd = evt.evtEnd;
 
 	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
-	var startFmt = start.format(fmtDateTime);
+	var startFmt = start.format(fmtDay);
 	rrule['startFmt'] = startFmt;
 	//setRRuleFields(rrule);
 	
@@ -388,6 +402,7 @@ function deleteFCEvent(f,flgRepeating,flgReload){
 }
 
 function deleteRRule(evt){
+	if(!evt.rruleID) return false;
 	if(!confirm("Delete all recurring events related to this event?")) return false;
 	var url ="/cal?pAction=rruleDelete";
 	url += "&rruleID=" + evt.rruleID;
@@ -449,7 +464,7 @@ function editRRule(evt){
 
 	if(!rrule) rrule = evt;
 	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
-	var startFmt = start.format(fmtFC);
+	var startFmt = start.format(fmtDay);
 	rrule['startFmt'] = startFmt;
 	//setRRuleFields(rrule);
 	
@@ -459,7 +474,7 @@ function editRRule(evt){
 	initRRuleControls(rrule);
 
 	$("#btnUpdateRRule").show();
-	$("#btnCancelCreateRRule").show();
+	$("#btnCancelRRule").show();
 
 	drr.dialog({title:'Edit Recurring Events',width:'600px'});
 	
@@ -568,9 +583,6 @@ function formatDate(myDate) {
 	return (myDate.getMonth() + 1 + "/" + myDate.getDate() + "/" + myDate
 			.getFullYear());
 }
-
-
-
 
 
 function getRRule(rruleID){
@@ -795,7 +807,7 @@ function initEventControls(evt,f){
 
 function initRRuleControls(rrule){
 
-	setOptions("rFrequencyCode",rruleOpts,rrule.rFrequencyCode);
+	setOptions("rFrequencyCode",freqOpts,rrule.rFrequencyCode);
 	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
 	//$("#rFrequencyCode").val(rrule.rfrequencycode);
 	//$("#rrInterval").val(rrule.rrinterval);
@@ -810,6 +822,7 @@ function initRRuleControls(rrule){
 		$("input[name='rad_rrUntil'][value='date']").prop("checked",true);
 	
 	});
+
 	$("input[name='rad_rrUntil']").change(function(evt){
 		var val = $(this).val();
 		if(val == 'date'){

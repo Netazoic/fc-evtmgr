@@ -15,10 +15,9 @@
 <input type="hidden" name="flgUpdate" id="flgUpdate" value="true"/>
 
 <div class="fldRow">
-    <div class="evtLabel">Repeats:</div><div class="evtField"><select id="rFrequencyCode" name="rFrequencyCode" maxlength="80" value="{rFrequencyCode}" style="width:317px;"/></div>
-</div>
-<div class="fldRow">
-    <div class="evtLabel">Repeats every:</div><div class="evtField"><select id="rrInterval" name="rrInterval" maxlength="80" value="{rrInterval}" style="width:40px;"/></div>
+    <div class="evtLabel">Repeats every:</div><div class="evtField"><select id="rrInterval" name="rrInterval" maxlength="80" value="{rrInterval}" style="width:40px;"/>
+    <select id="rFrequencyCode" name="rFrequencyCode" maxlength="80" value="{rFrequencyCode}" style="width:217px;"/>
+    </div>
 </div>
 <div class="fldRow">
     <div class="evtLabel">Starts On:</div><div class="evtField" style="font-size:12px;font-weight:normal;">{startFmt}</div>
@@ -45,8 +44,9 @@
 <div style="display:block; margin-top:1em"></div>
 <div class="fldRow">
     <button id="btnUpdateRRule" class="evtButton" style="display:none;" onclick="updateRRule(this.form);closeRRule();reloadCalendar();return false;">Update</button>
-    <button id="btnCreateRRule" class="evtButton" style="display:none;" onclick="createRRule(this.form);closeRRule();return false;">Create</button>
-    <button id='btnCancelCreateRRule' class="evtButton" style="display:none;" onclick="closeRRule();return false;">Cancel</button>
+    <button id="btnCreateRRule" class="evtButton" style="display:none;" onclick="createRRuleHdlr(this.form);return false;">Create</button>
+    <button id='btnCancelRRule' class="evtButton" style="display:none;" onclick="closeRRule();return false;">Cancel</button>
+    <button id='btnCancelCreateRRule' class="evtButton" style="display:none;" onclick="cancelRRule();return false;">Cancel</button>
 
 </div>
 
