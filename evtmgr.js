@@ -1292,6 +1292,6 @@ function updateFCEvent(f,evt){
 		calendar.fullCalendar('updateEvent',evt);
 		//calendar.fullCalendar('renderEvent', event, true );	
 		};
-	jqSubmit(f,false,fLoad);
+	jqSubmit(f,true,fLoad);
 	return evt;
 }
