@@ -299,7 +299,7 @@ function createRRuleShow(evt){
 	$("#btnCreateRRule").show();
 	$("#btnCancelCreateRRule").show();
 
-	drr.dialog({title:'Edit Recurring Events',width:'600px'});
+	drr.dialog({title:'Edit Recurring Events',width:'600px',modal:true});
 	
 }
 
@@ -737,14 +737,17 @@ function initEventControls(evt,f){
 	//setDateTimeField(f);
 	$(".datepicker").datepicker();
 	$(".timepicker").timepicker({scrollDefaultTime:'09:00'});
-	$("#evtStartDate").change(setDateRange);
-	$("#evtStartTime").change(setTimeRange);
+	var ds = $("#evtStartDate");
+	var ts = $("#evtStartTime");
+	setDateRange(ds);
+	setTimeRange(ts);
+
+	ds.change(setDateRangeHdlr);
+	ts.change(setTimeRangeHdlr);
 	$('#evtAllDay').change(function(){
 		setAllDayFields(this.checked);
 	});
-	$('#evtStartDate').change(function(event){
-		evt.startDate = $(this).val();
-	});		
+
 	$('#evtEndDate').change(function(event){
 		evt.endDate = $(this).val();
 	});	
@@ -819,13 +822,21 @@ function initRRuleControls(rrule,evt){
 	
 	var ms = moment(evt.endDate + " " + evt.endTime,"MM/DD/YYYY HH:mm:ss").diff(moment(evt.startDate + " " + evt.startTime,"MM/DD/YYYY HH:mm:ss"));
 	var msFmt = moment.utc(ms).format("HH:mm");
+	var months = moment.duration(ms).months();
 	var days = moment.duration(ms+1).days();
 	var hours = moment.duration(ms+1).hours();
 	var myFreqOpts = {'-- select frequency --':'','Days':'DAILY','Weeks':'WEEKLY','Months':'MONTHLY','Years':'YEARLY'};
 
 	if(days>=1)  delete myFreqOpts.Days; //Remove 'Days' option
-	if(days>=7)  delete myFreqOpts.Weeks; //Remove 'Weeks' option
-	if(days>=30)  delete myFreqOpts.Months; //Remove 'Months' option
+	if(days>=7){
+		delete myFreqOpts.Weeks; //Remove 'Weeks' option
+	}
+	if(months>=1){
+		//delete myFreqOpts.Months; //Remove 'Months' option
+		delete myFreqOpts.Weeks;
+		delete myFreqOpts.Days;
+	}
+	if(months>=6) delete myFreqOpts.Months;
 
 	setOptions("rFrequencyCode",myFreqOpts,rrule.rFrequencyCode);
 	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
@@ -1080,35 +1091,42 @@ function setEvtFields(evt){
 
 }
 
-function setDateRange(evtObj){
+function setDateRange(dateObj){
+	//dateObj is a jquery ui datepicker
+	var endDateObj = $("#evtEndDate");
+	var startDate = dateObj.val();
+	var d = new Date(startDate);
+	var mm = new moment(d);
+	mm.add('month',2);
+	$("#evtEndDate").datepicker("option","minDate",d);
+	$("#evtEndDate").datepicker("option","maxDate",mm.toDate());
+	
+}function setDateRangeHdlr(evtObj){
 	//evtObj is a javascript UI event
 	//Fired after a date picker is changed
 	// 'this' is evtStartDate
-	var endDateObj = $("#evtEndDate");
-	var startDate = this.value;
-	var d = new Date(startDate);
-	$("#evtEndDate").datepicker("option","minDate",d);
-	
+	setDateRange($(this));
 }
 
-function setTimeRange(evtObj){
-	//evtObj is a javascript UI event
-	//Fired after a time picker is changed
-	// 'this' is evtStarttime
+function setTimeRange(timeObj){
+	//timeObj is a timepicker object
 	var end = $("#evtEndTime");
 	var start = $("#evtStartTime");
-	var startTime = this.value;
+	var startTime = timeObj.value;
 	var startInt = start.timepicker('getSecondsFromMidnight');
 	var endInt = end.timepicker('getSecondsFromMidnight');
 	var delta = endInt - startInt;
 	if(!delta || delta < 0) delta = 1800;
-
-	//var opts = {};
-	//opts.disableTimeRanges = [['12:00am','" + startTime +"']];
-	//$("#evtEndTime").timepicker(opts);
 	end.timepicker('option', 'minTime', startInt);
 	var newEnd = (startInt+delta)%86400;
 	end.timepicker('setTime', newEnd);
+}
+
+function setTimeRangeHdlr(evtObj){
+	//evtObj is a javascript UI event
+	//Fired after a time picker is changed
+	// 'this' is evtStarttime
+	setTimeRange($(this));
 }
 
 function setDateTimeField(f){
