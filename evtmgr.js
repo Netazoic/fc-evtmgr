@@ -226,7 +226,8 @@ function createFCEventMinimal(startDate,endDate,allDay){
 	// var jqID = "#" + f.id;
 	// $.post(url, $(jqID).serialize(), fLoad);
 	jqGet(url, true, fLoad);
-	editFCEvent(event);
+	flgMode = 'CREATE';
+	editFCEvent(event,null,null,null,flgMode);
 
 }
 
@@ -248,11 +249,11 @@ function createRRule(f) {
 		// These need to be converted into actual date objects.
 		event.start = new Date(event.start);
 		event.end = new Date(event.end);
+		id = event.rruleID;
  		// render in the calendar
 		calendar.fullCalendar('renderEvent', event, false // make the event
 															// not "stick"
 		);
-		id = event.id;
 	}
 	// var jqID = "#" + f.id;
 	// $.post(url, $(jqID).serialize(), fLoad);
@@ -280,10 +281,10 @@ function createRRuleShow(evt){
 	}
 	rrule = new RRule();
 	rrule.eventID = evt.eventID;
-	rrule.evtStart = evt.evtStart;
-	rrule.evtEnd = evt.evtEnd;
+	rrule.evtStart = evt.evtStart?evt.evtStart:evt.startDate;
+	rrule.evtEnd = evt.evtEnd?evt.evtEnd:evt.endDate;
 
-	var start = moment(evt.startdate + " " + evt.starttime, fmtFC);
+	var start = moment(evt.startDate + " " + evt.startTime, fmtFC);
 	var startFmt = start.format(fmtDay);
 	rrule['startFmt'] = startFmt;
 	//setRRuleFields(rrule);
@@ -292,7 +293,7 @@ function createRRuleShow(evt){
 	str = supplant(str, rrule);
 	drr.html(str);
 
-	 initRRuleControls(rrule);
+	 initRRuleControls(rrule,evt);
 
 
 	$("#btnCreateRRule").show();
@@ -471,7 +472,7 @@ function editRRule(evt){
 	var str = getRRuleTemplate();
 	str = supplant(str, rrule);
 	drr.html(str);
-	initRRuleControls(rrule);
+	initRRuleControls(rrule,evt);
 
 	$("#btnUpdateRRule").show();
 	$("#btnCancelRRule").show();
@@ -480,9 +481,10 @@ function editRRule(evt){
 	
 }
 
-function editFCEvent(evt, jsEvt, view, opts) {
+function editFCEvent(evt, jsEvt, view, opts,flgMode) {
 	var divID = DIV_ID;
 	var formID = "frmEditEvent";
+	if(!flgMode)flgMode = 'EDIT';
 	var edit = $('#' + divID);
 	var dEdit = $('#' + divID);
 	if(!dEdit[0]){
@@ -535,7 +537,7 @@ function editFCEvent(evt, jsEvt, view, opts) {
 			return;
 		}
 		initEventControls(evt);
-		setButtons('EDIT',evt);
+		setButtons(flgMode,evt);
 
 		return false;
 	}
@@ -740,6 +742,12 @@ function initEventControls(evt,f){
 	$('#evtAllDay').change(function(){
 		setAllDayFields(this.checked);
 	});
+	$('#evtStartDate').change(function(event){
+		evt.startDate = $(this).val();
+	});		
+	$('#evtEndDate').change(function(event){
+		evt.endDate = $(this).val();
+	});	
 	$('#flgRepeating').change(function(event){
 		if(this.checked){
 			createRRuleShow(evt);
@@ -805,9 +813,21 @@ function initEventControls(evt,f){
 
 }
 
-function initRRuleControls(rrule){
+function initRRuleControls(rrule,evt){
+	//calc the interval defined by evtStart - evtEnd
+	//Don't allow a frequency less than the evt period
+	
+	var ms = moment(evt.endDate + " " + evt.endTime,"MM/DD/YYYY HH:mm:ss").diff(moment(evt.startDate + " " + evt.startTime,"MM/DD/YYYY HH:mm:ss"));
+	var msFmt = moment.utc(ms).format("HH:mm");
+	var days = moment.duration(ms+1).days();
+	var hours = moment.duration(ms+1).hours();
+	var myFreqOpts = {'-- select frequency --':'','Days':'DAILY','Weeks':'WEEKLY','Months':'MONTHLY','Years':'YEARLY'};
 
-	setOptions("rFrequencyCode",freqOpts,rrule.rFrequencyCode);
+	if(days>=1)  delete myFreqOpts.Days; //Remove 'Days' option
+	if(days>=7)  delete myFreqOpts.Weeks; //Remove 'Weeks' option
+	if(days>=30)  delete myFreqOpts.Months; //Remove 'Months' option
+
+	setOptions("rFrequencyCode",myFreqOpts,rrule.rFrequencyCode);
 	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
 	//$("#rFrequencyCode").val(rrule.rfrequencycode);
 	//$("#rrInterval").val(rrule.rrinterval);
