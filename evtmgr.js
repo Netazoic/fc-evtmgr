@@ -423,6 +423,15 @@ function dropHdlr(event,dayDelta,minuteDelta,allDay,revertFunc) {
     }else{
         //alert("Event has a time-of-day");
     }
+    var repeatID = event.repeatID;
+    if(repeatID){
+    	var repeatID = repeatID.split(".")[1];
+    	if(repeatID!=0){
+    		alert("This event is part of a repeating series. Please use the event editor to adjust dates for this series.");
+    		revertFunc();
+    		return false;
+    	}
+    }
 
 	//calendar.fullCalendar('updateEvent',event);
     //editFCEvent(event);
@@ -477,7 +486,7 @@ function editRRule(evt){
 	$("#btnUpdateRRule").show();
 	$("#btnCancelRRule").show();
 
-	drr.dialog({title:'Edit Recurring Events',width:'600px'});
+	drr.dialog({title:'Edit Recurring Events',width:'600px',modal:true});
 	
 }
 
@@ -827,7 +836,7 @@ function initRRuleControls(rrule,evt){
 	var hours = moment.duration(ms+1).hours();
 	var myFreqOpts = {'-- select frequency --':'','Days':'DAILY','Weeks':'WEEKLY','Months':'MONTHLY','Years':'YEARLY'};
 
-	if(days>=1)  delete myFreqOpts.Days; //Remove 'Days' option
+	if(days>=4)  delete myFreqOpts.Days; //Remove 'Days' option
 	if(days>=7){
 		delete myFreqOpts.Weeks; //Remove 'Weeks' option
 	}
@@ -1273,7 +1282,7 @@ function updateEventTimes(evt){
 	url +="&evtEndString=" + end.format(fmtDateTime);
 	url += "&evtAllDay=" + evtAllDay;
 	url +="&flgUpdate=true";
-	jqGet(url,false,null);
+	jqGet(url,true,null);
 }
 
 function updateAndCloseEvent(f){
