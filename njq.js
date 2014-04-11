@@ -140,7 +140,8 @@ function jqGet(myURL, flgSync, fLoad, fErr, dataType) {
 
 }
 function jqSubmit(f, flgSync, fLoad, fErr, dataType) {
-
+	var $f = (f instanceof jQuery)?f:$("#" + f.id);
+	f = $f[0];
 	if (dataType == null)
 		dataType = 'json';
 	if (fErr == null)
@@ -148,7 +149,7 @@ function jqSubmit(f, flgSync, fLoad, fErr, dataType) {
 	var jqxhr = $.ajax({
 		type : "POST",
 		url : f.action,
-		data : $("#" + f.id).serialize(),
+		data : $f.serialize(),
 		async : !flgSync,
 		success : fLoad,
 		dataType : dataType

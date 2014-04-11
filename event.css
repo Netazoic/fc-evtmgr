@@ -103,3 +103,5 @@ option.eventSTYLE07 {background-color:white;color:#6c3108;}
 option.eventSTYLE08 {background-color:white;color:#35291f;}
 option.eventSTYLE09 {background-color:white;color:#791235;}
 option.eventSTYLE10 {background-color:white;color:#cccccc;}
+
+.ui-widget .ui-widget.dlg-button{font-size:.6em;}

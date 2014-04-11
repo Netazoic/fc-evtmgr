@@ -9,6 +9,7 @@
 <input type="hidden" name="repeatID" id="repeatID" value="{repeatID}"/>
 <input type="hidden" name="calendarID" id="calendarID" value="{calendarid}"/>
 <input type="hidden" name="flgUpdate" id="flgUpdate" value="true"/>
+<input type="hidden" name="recUpdateMode" id="recUpdateMode"/>
 <object name="evtObject" id="evtObject" style="display;none;">
 <!-- 
 <div id="evtLabel">When:</div>
@@ -41,7 +42,6 @@
     <div class="evtLabel2">Repeats: <img id="imgRecursionInfo" src="/images/help.gif" style="display:none;"/></div>
     <div class="evtCheckbox"><input type="checkbox" id="flgRepeating" name="flgRepeating" value="1"> 
     <input type="button" id="editRepeat" value="edit" style="display:none;"/>
-    <input type="button" id='btnRemoveEvtFromSeries' class="evtButton" style="display:none;" value="remove" title="Remove event from repeating series" />
     
     </div>
 </div>
@@ -122,7 +122,10 @@
 </form>
 
 </div>
-
+<div id="dialog-update-recurring" title="Edit Recurring Event" style="display:none;">This event is part of a series.
+Update:</div>
+<div id="dialog-delete-recurring" title="Delete Recurring Event" style="display:none;">This event is part of a series.
+Delete:</div>
 <script type="text/javascript">
 
 

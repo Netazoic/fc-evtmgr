@@ -20,6 +20,8 @@ var fmtTime = ("h:mma");
 var fmtFC = ("MM/DD/YYYY HH:mma");
 var fmtICal = ("YYYYMMDD'T'HHmmss");
 
+var ZERO_HOUR = "12:00am";
+
 var globEvent;
 //Minimum dimensions for event create/edit dialog
 var minHeight="500";
@@ -305,36 +307,6 @@ function createRRuleShow(evt){
 
 
 
-function updateRRule(f) {
-	// update a recurrence rule based on form data
-
-	if(!f.rFrequencyCode.value){
-		alert ("The frequency code field cannot be empty");
-		return false;
-	}
-	// Send the event to the back end
-	var url = "/cal?pAction=rruleUpdate";
-	f.action = url;
-	var event;
-	var id;
-	var fLoad = function(data) {
-		event = data;
-		// Times are passed through json as millisecond values.
-		// These need to be converted into actual date objects.
-		event.start = new Date(event.start);
-		event.end = new Date(event.end);
- 		// render in the calendar
-		calendar.fullCalendar('renderEvent', event, false // make the event
-															// not "stick"
-		);
-		id = event.id;
-	}
-	// var jqID = "#" + f.id;
-	// $.post(url, $(jqID).serialize(), fLoad);
-	jqSubmit(f, true, fLoad);
-	return id;
-}
-
 
 function createAndEditEvent(f){
 	var id = createFCEvent(f);
@@ -380,16 +352,63 @@ function dayClickHdlr(date, allDay, jsEvent, view) {
 	  }
 	}
 
-function deleteFCEvent(f,flgRepeating,flgReload){
-	if(flgRepeating){
-		var msg = "This is a repeating event. If you delete this event, all events in the series will be deleted.";
+function deleteFCEvent(f,evt){
+	var $f = (f instanceof jQuery)?f:$("#" + f.id);
+	f = $f[0];
+	if(!evt) evt = globEvent;
+	var flgReload = evt.flgRepeating != null;
+	if(evt.flgRepeating && !f.recUpdateMode.value){
+	    $( "#dialog-delete-recurring" ).dialog({
+	        resizable: true,
+	        width:480,
+	        modal: true,
+	        buttons: [
+    	          { text:"All events",
+    	        	  class: "dlg-button",
+    	        	  click:function(){
+    	        	  f.recUpdateMode.value = "ALL";
+    		            $( this ).dialog( "close" );
+    		            deleteFCEvent($f,evt); 
+    	        	  }
+    	          },
+	    	   { text: "This event only",
+	        	   class: "dlg-button",
+	        	   click: function() {
+		        	  f.recUpdateMode.value = "EXTRACT";
+		            $( this ).dialog( "close" );
+		            deleteFCEvent($f,evt);
+	        	   }
+	          },
+	          {text:"All events going forward",
+	        	  class: "dlg-button",
+	        	  click:function(){
+	        	  f.recUpdateMode.value = "FWD";
+		            $( this ).dialog( "close" );
+		            var data = $f.serialize();
+		            deleteFCEvent($f,evt);
+	        	  }
+	          },
+
+	          { text: "Cancel",
+	        	  class: "dlg-button",
+	        	  click: function() {
+	            $( this ).dialog( "close" );
+	        	}
+	          }
+	        ]
+	      });
+	    return;
+	}
+
+	if(evt.flgRepeating && f.recUpdateMode.value == 'ALL' ){
+		var msg = "All events in the series will be deleted.";
 		msg += "\r\n Do you really want to delete this entire series?";
 		if(!confirm(msg)) return false;
 	}
 	var url ="/cal?pAction=eventDelete";
 	f.action=url;
 	var fLoad = function(data){
-		event = data;
+		var event = data;
 		var id = event.id;
 		if(flgReload){
 			reloadCalendar();
@@ -410,12 +429,55 @@ function deleteRRule(evt){
 	url += "&eventID=" + evt.eventID;
 	
 	var fLoad = function(data){
-		event = evalJSON(data);
+		var event = evalJSON(data);
 		var id = event.id;
 		//calendar.fullCalendar('removeEvents', id );	
 		};
 	jqGet(url,false,fLoad);
+	evt.flgRepeating = false;
 }
+
+function dialogUpdateType(divID,f,fLoad){
+    $( "#" + id ).dialog({
+        resizable: true,
+        width:480,
+        modal: true,
+        buttons: [
+          { text:"All events",
+        	  class: "dlg-button",
+        	  click: function(){
+        		f.recUpdateMode.value = "ALL";
+	            $( this ).dialog( "close" );
+	            fLoad();
+        	  }
+          },
+          { text:"This event only", 
+        	  class: "dlg-button",
+        	click:function() {
+        	  f.recUpdateMode.value = "EXTRACT";
+            $( this ).dialog( "close" );
+            fLoad();
+        	}
+          },
+          {	text:"All events going forward",
+        	  class: "dlg-button",
+        	  click:function(){
+        		f.recUpdateMode.value = "FWD";
+	            $( this ).dialog( "close" );
+	            var data = $f.serialize();
+	            fLoad();        	  
+          }},
+          { text: "Cancel", 
+        	  class: "dlg-button",
+        	  click: function() {
+        		  f.recUpdateMode.value= null;
+        		  $( this ).dialog( "close" );
+        	  }
+          }
+        ]
+      });
+}
+
 function dropHdlr(event,dayDelta,minuteDelta,allDay,revertFunc) {
 
      if (allDay) {
@@ -558,16 +620,7 @@ function editFCEvent(evt, jsEvt, view, opts,flgMode) {
 	return false;
 }
 
-function setAllDayFields(flg){
-	if(flg){
-		$('.timepicker').hide();
-		//$('#divEvtEndDate').hide();
-		$('#evtAllDay').prop('checked', true);
-	}
-	else{
-		$('.timepicker').show();
-	}
-}
+
 
 
 
@@ -754,6 +807,7 @@ function initEventControls(evt,f){
 	ds.change(setDateRangeHdlr);
 	ts.change(setTimeRangeHdlr);
 	$('#evtAllDay').change(function(){
+		setDateTimeField(this.form);
 		setAllDayFields(this.checked);
 	});
 
@@ -773,11 +827,7 @@ function initEventControls(evt,f){
 	$("#editRepeat").click(function(event){
 		editRRule(evt);
 	});
-	$("#btnRemoveEvtFromSeries").click(function(event){
-		removeFCEventFromSeries(this.form);
 
-		return false;
-	});
 	
 	$("#btnDeleteEvt").click(function(event){
 		deleteFCEvent(this.form);
@@ -794,6 +844,7 @@ function initEventControls(evt,f){
 	setEvtCategorySelect(evt);
 	//Load the recurrenc rules
 	setEvtRecurrenceSelect(evt);
+	/*
 	//Adjust page for repeated event
 	if(evt.flgRepeating && evt.flgFirstEvt){
 		$("#btnDeleteEvt").unbind("click");
@@ -821,7 +872,7 @@ function initEventControls(evt,f){
 		});
 		
 	}
-	
+	*/
 
 }
 
@@ -964,6 +1015,17 @@ function selectHdlrDemo(start, end, allDay) {
 		);
 	}
 	calendar.fullCalendar('unselect');
+}
+
+function setAllDayFields(flg){
+	if(flg){
+		$('.timepicker').hide();
+		//$('#divEvtEndDate').hide();
+		$('#evtAllDay').prop('checked', true);
+	}
+	else{
+		$('.timepicker').show();
+	}
 }
 
 function setEvtRecurrenceSelect(evt){
@@ -1144,6 +1206,11 @@ function setDateTimeField(f){
 	var dateEnd = f.evtEndDate.value;
 	var timeStart = f.evtStartTime.value;
 	var timeEnd = f.evtEndTime.value;
+	var flgAllDay = f.evtAllDay.checked;
+	if(flgAllDay){
+		timeStart = ZERO_HOUR;
+		timeEnd = ZERO_HOUR;
+	}
 	
 	var start = moment(dateStart + " " + timeStart, fmtFC);
 	var end = moment(dateEnd + " " + timeEnd, fmtFC);
@@ -1165,9 +1232,7 @@ function setButtons(mode,evt){
 		$('#btnUpdateEvt').show();
 		$('#btnDeleteEvt').show();
 		$('#btnCancelEditEvt').show();
-		if(evt.flgRepeating && !evt.flgFirstEvt){
-			$('#btnRemoveEvtFromSeries').show();
-		}
+
 	}
 }
 
@@ -1296,38 +1361,57 @@ function updateFCEvent(f,evt){
 	if(!f){
 		editFCEvent(evt);
 	}
+	var $f = (f instanceof jQuery)?f:$("#" + f.id);
+	f = $f[0];
 	if(!evt) evt = globEvent;
-	if(evt.flgRepeating && !evt.flgFirstEvt){
-		//if(!confirm("This is a repeating event. Do you want to update all events in this series? If not, you need to first make this into a separate event, then you can edit this event's properties.")){
-		//	return false;
-		//}	
-		
-		//We do not want to update dates and times for a repeating event (unless the repeating event is being split into sub-groups)
-		//Retrieve the dates and times from the original event in the series
-		var repeatID = evt.repeatID;
-		var firstEvtID = repeatID.split(".")[0] + ".0";
-		var firstEvt = new Evt();
-		firstEvt  = calendar.fullCalendar('clientEvents',firstEvtID)[0];
-		firstEvt.evtAllDay = firstEvt.allDay;
-		
-		var mmStart = new moment(firstEvt.start);
-		var mmEnd = new moment(firstEvt.end);
-		if(!mmEnd.format) mmEnd = new moment(firstEvt.start);
-		
-		f.evtStartDate.value = mmStart.format(fmtDay);  //format as date
-		f.evtStartTime.value = mmStart.format(fmtTime); //format as time
-		f.evtEndDate.value = mmEnd.format(fmtDay);
-		f.evtEndTime.value = mmEnd.format(fmtTime);
-		f.evtAllDay.value = firstEvt.allDay?1:0;
-		f.evtAllDay.disabled = false;
+	if(evt.flgRepeating && !f.recUpdateMode.value){
+	    $( "#dialog-update-recurring" ).dialog({
+	        resizable: true,
+	        width:480,
+	        modal: true,
+	        buttons: [
+	          { text:"All events",
+	        	  class: "dlg-button",
+	        	  click: function(){
+	        		f.recUpdateMode.value = "ALL";
+		            $( this ).dialog( "close" );
+		            updateFCEvent($f,evt);
+	        	  }
+	          },
+	          { text:"This event only", 
+	        	  class: "dlg-button",
+	        	click:function() {
+	        	  f.recUpdateMode.value = "EXTRACT";
+	            $( this ).dialog( "close" );
+	            updateFCEvent($f,evt);
+	        	}
+	          },
+	          {	text:"All events going forward",
+	        	  class: "dlg-button",
+	        	  click:function(){
+	        		f.recUpdateMode.value = "FWD";
+		            $( this ).dialog( "close" );
+		            var data = $f.serialize();
+		            updateFCEvent($f,evt);        	  
+	          }},
+	          { text: "Cancel", 
+	        	  class: "dlg-button",
+	        	  click: function() {
+	        		  $( this ).dialog( "close" );
+	        	  }
+	          }
+	        ]
+	      });
+	    return;
 	}
+
 	//Update evtStart and evtEnd
 	setDateTimeField(f);
 
 	var evtObj = f.evtObject;
 	if(!evtObj){
 		evtObj = {id:'evtObject'};
-		$('#' + f.id).append(evtObj);
+		$f.append(evtObj);
 	}
 	for(k in globEvent){
 		var v = globEvent[k];
@@ -1338,6 +1422,10 @@ function updateFCEvent(f,evt){
 	//TODO
 	var fLoad = function(data){
 		var event = data;
+		if(evt.flgRepeating){
+			reloadCalendar();
+			return;
+		}
 		var k,v;
 		for(k in event){
 			v = event[k];
@@ -1352,6 +1440,41 @@ function updateFCEvent(f,evt){
 		calendar.fullCalendar('updateEvent',evt);
 		//calendar.fullCalendar('renderEvent', event, true );	
 		};
-	jqSubmit(f,true,fLoad);
+	jqSubmit($f,true,fLoad);
 	return evt;
 }
+
+function updateRRule(f) {
+	// update a recurrence rule based on form data
+
+	if(!f.rFrequencyCode.value){
+		alert ("The frequency code field cannot be empty");
+		return false;
+	}
+	// Send the event to the back end
+	var url = "/cal?pAction=rruleUpdate";
+	f.action = url;
+	var event;
+	var id;
+	var fLoad = function(data) {
+		event = data;
+		// Times are passed through json as millisecond values.
+		// These need to be converted into actual date objects.
+		event.start = new Date(event.start);
+		event.end = new Date(event.end);
+ 		// render in the calendar
+		calendar.fullCalendar('renderEvent', event, false // make the event
+															// not "stick"
+		);
+		id = event.id;
+		closeRRule();
+		closeEventEdit();
+		reloadCalendar();
+	}
+	// var jqID = "#" + f.id;
+	// $.post(url, $(jqID).serialize(), fLoad);
+	jqSubmit(f, true, fLoad);
+	return id;
+}
+
+
