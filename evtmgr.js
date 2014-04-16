@@ -364,7 +364,7 @@ function deleteFCEvent(f,evt){
 	        modal: true,
 	        buttons: [
     	          { text:"All events",
-    	        	  class: "dlg-button",
+    	        	  "class": "dlg-button",
     	        	  click:function(){
     	        	  f.recUpdateMode.value = "ALL";
     		            $( this ).dialog( "close" );
@@ -372,7 +372,7 @@ function deleteFCEvent(f,evt){
     	        	  }
     	          },
 	    	   { text: "This event only",
-	        	   class: "dlg-button",
+	        	   "class": "dlg-button",
 	        	   click: function() {
 		        	  f.recUpdateMode.value = "EXTRACT";
 		            $( this ).dialog( "close" );
@@ -380,7 +380,7 @@ function deleteFCEvent(f,evt){
 	        	   }
 	          },
 	          {text:"All events going forward",
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	  click:function(){
 	        	  f.recUpdateMode.value = "FWD";
 		            $( this ).dialog( "close" );
@@ -390,7 +390,7 @@ function deleteFCEvent(f,evt){
 	          },
 
 	          { text: "Cancel",
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	  click: function() {
 	            $( this ).dialog( "close" );
 	        	}
@@ -444,7 +444,7 @@ function dialogUpdateType(divID,f,fLoad){
         modal: true,
         buttons: [
           { text:"All events",
-        	  class: "dlg-button",
+        	  "class": "dlg-button",
         	  click: function(){
         		f.recUpdateMode.value = "ALL";
 	            $( this ).dialog( "close" );
@@ -452,7 +452,7 @@ function dialogUpdateType(divID,f,fLoad){
         	  }
           },
           { text:"This event only", 
-        	  class: "dlg-button",
+        	  "class": "dlg-button",
         	click:function() {
         	  f.recUpdateMode.value = "EXTRACT";
             $( this ).dialog( "close" );
@@ -460,7 +460,7 @@ function dialogUpdateType(divID,f,fLoad){
         	}
           },
           {	text:"All events going forward",
-        	  class: "dlg-button",
+        	  "class": "dlg-button",
         	  click:function(){
         		f.recUpdateMode.value = "FWD";
 	            $( this ).dialog( "close" );
@@ -468,7 +468,7 @@ function dialogUpdateType(divID,f,fLoad){
 	            fLoad();        	  
           }},
           { text: "Cancel", 
-        	  class: "dlg-button",
+        	  "class": "dlg-button",
         	  click: function() {
         		  f.recUpdateMode.value= null;
         		  $( this ).dialog( "close" );
@@ -1371,7 +1371,7 @@ function updateFCEvent(f,evt){
 	        modal: true,
 	        buttons: [
 	          { text:"All events",
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	  click: function(){
 	        		f.recUpdateMode.value = "ALL";
 		            $( this ).dialog( "close" );
@@ -1379,7 +1379,7 @@ function updateFCEvent(f,evt){
 	        	  }
 	          },
 	          { text:"This event only", 
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	click:function() {
 	        	  f.recUpdateMode.value = "EXTRACT";
 	            $( this ).dialog( "close" );
@@ -1387,7 +1387,7 @@ function updateFCEvent(f,evt){
 	        	}
 	          },
 	          {	text:"All events going forward",
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	  click:function(){
 	        		f.recUpdateMode.value = "FWD";
 		            $( this ).dialog( "close" );
@@ -1395,7 +1395,7 @@ function updateFCEvent(f,evt){
 		            updateFCEvent($f,evt);        	  
 	          }},
 	          { text: "Cancel", 
-	        	  class: "dlg-button",
+	        	  "class": "dlg-button",
 	        	  click: function() {
 	        		  $( this ).dialog( "close" );
 	        	  }
