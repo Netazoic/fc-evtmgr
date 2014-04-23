@@ -1145,7 +1145,7 @@ function setEvtFields(evt){
 	
 	startDisplay = startDate.format(fmtDisplay);
 	startString = startDate.format(fmtDateTime);
-	evt.startString = startString;
+	evt.startString = encodeURIComponent(startString);  //preserve the '+' in TimeZone designations
 	evt.startDisplay = startDisplay;
 	evt.startTime = startDate.format(fmtTime);
 	evt.startDate = startDate.format(fmtDay);
@@ -1155,7 +1155,7 @@ function setEvtFields(evt){
 		endDisplay = endDate.format(fmtDisplay);
 		evt.endTime = endDate.format(fmtTime);
 		evt.endDate = endDate.format(fmtDay);
-		evt.endString = endString;
+		evt.endString = encodeURIComponent(endString);
 		evt.endDisplay = endDisplay;
 	}
 	evt.day = getDay(evt.start);
