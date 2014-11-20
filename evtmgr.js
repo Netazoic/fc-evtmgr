@@ -1,13 +1,27 @@
 //For use with the fullcalendar library by Adam Shaw
 //www.fullcalendar.com
 
+//SET BY USER
+var DIR_FC="/lib/fc-evtmgr";		//Path to this library
+//set to the REST points for your back end system
+var URL_CREATE_EVENT;			//e.g., "/cal?pAction=eventCreate";
+var URL_RETRIEVE_EVENT;			//e.g., "/cal?pAction=eventRetrieve"
+var URL_UPDATE_EVENT;   		//e.g., "/cal?pAction=eventUpdate";
+var URL_DELETE_EVENT;			//e.g.,	"/cal?pAction=eventDelete";
+var URL_CREATE_RULE;			//e.g., "/cal?pAction=rruleCreate";
+var URL_RETRIEVE_RULE;			//e.g., "/cal?pAction=GetRecords&q=/CAL/Event/sql/RetrieveRRULE.sql";
+var URL_UPDATE_RULE;			//e.g., "/cal?pAction=rruleUpdate";
+var URL_DELETE_RULE;			//e.g., "/cal?pAction=rruleDelete";
+
+var flg_USE_CATEGORIES = false;		//Event categories.  Not part of the iCalendar spec
+var URL_RETRIEVE_CATEGORIES;	//e.g., 	var url = "/cal?pAction=GetRecords&q=/CAL/Calendar/sql/GetCalendarCategories.sql";
+
 var calendar;
 var flgFirstClick;
 var editTemplate;
 var createTemplate;
 var rruleTemplate;
 var calendarID;  //Must be set in the parent page
-var DIR_FC="/js/fc-evtmgr";
 var DIV_ID="eventEdit";
 var DIV_ID_C="eventCreate";
 var RRULE_DIV_ID="divRRule";
@@ -93,8 +107,13 @@ function createFCEvent(f) {
 	}
 	//Update evtStart and evtEnd
 	setDateTimeField(f);
-	// Send the event to the back end
-	var url = "/cal?pAction=eventCreate";
+	// Send the event to the back end;
+	var url = URL_CREATE_EVENT;
+
+	if(!url){
+		console.debug("URL_CREATE_EVENT not defined");
+		exit;
+	}
 	f.action = url;
 	var event;
 	var id;
@@ -214,7 +233,11 @@ function createFCEventMinimal(startDate,endDate,allDay){
 		id = event.id;
 	}
 	var jsonEvt = $.param(evt);
-	var url = "/cal?pAction=eventCreate";
+	var url = URL_CREATE_EVENT;
+	if(!url){
+		console.debug("URL_CREATE_EVENT not defined");
+		return;
+	}
 	url += "&calendarID=" + calendarID;
 	for (x in evt){
 		url += "&" + x + "=" + evt[x];
@@ -227,7 +250,7 @@ function createFCEventMinimal(startDate,endDate,allDay){
 	//url += "&evt=" + jsonEvt;
 	// var jqID = "#" + f.id;
 	// $.post(url, $(jqID).serialize(), fLoad);
-	jqGet(url, true, fLoad);
+	njq.njq.jqGet(url, true, fLoad);
 	flgMode = 'CREATE';
 	editFCEvent(event,null,null,null,flgMode);
 
@@ -241,7 +264,8 @@ function createRRule(f) {
 		return false;
 	}
 	// Send the event to the back end
-	var url = "/cal?pAction=rruleCreate";
+	var url = URL_CREATE_RULE;
+	if(!url){console.debug("URL_CREATE_RULE not defined");return}
 	f.action = url;
 	var event;
 	var id;
@@ -405,7 +429,8 @@ function deleteFCEvent(f,evt){
 		msg += "\r\n Do you really want to delete this entire series?";
 		if(!confirm(msg)) return false;
 	}
-	var url ="/cal?pAction=eventDelete";
+	var url = URL_DELETE_EVENT;
+	if(!url){console.debug("URL_DELETE_EVENT not defined");return;}
 	f.action=url;
 	var fLoad = function(data){
 		var event = data;
@@ -424,7 +449,9 @@ function deleteFCEvent(f,evt){
 function deleteRRule(evt){
 	if(!evt.rruleID) return false;
 	if(!confirm("Delete all recurring events related to this event?")) return false;
-	var url ="/cal?pAction=rruleDelete";
+
+	var url = URL_DELETE_RULE;
+	if(!url){console.debug("URL_DELETE_RULE not defined");return;}
 	url += "&rruleID=" + evt.rruleID;
 	url += "&eventID=" + evt.eventID;
 	
@@ -433,7 +460,7 @@ function deleteRRule(evt){
 		var id = event.id;
 		//calendar.fullCalendar('removeEvents', id );	
 		};
-	jqGet(url,false,fLoad);
+	njq.jqGet(url,false,fLoad);
 	evt.flgRepeating = false;
 }
 
@@ -649,30 +676,7 @@ function formatDate(myDate) {
 }
 
 
-function getRRule(rruleID){
-	var rrule = new RRule();
-	if(!rruleID) return null;
-	var url = "/cal?pAction=GetRecords";
-	url += "&q=/CAL/Event/sql/RetrieveRRULE.sql";
-	
-	url += "&rruleID=" + rruleID;
-	var fLoad = function(data){
-		var rec = data[0];
-		//var mRRUntil = moment(rec.rruntil, fmtFC);
-		var rrUntil = null;
-		if(rec.rruntil){
-			var mRRUntil = moment(rec.rruntil,fmtICal);
-			rrUntil = mRRUntil.format(fmtDay);
-		}
-		rrule.rruleID = rec.rruleid;
-		rrule.rFrequencyCode = rec.rfrequencycode;
-		rrule.rrUntil = rrUntil;
-		rrule.rrCount = rec.rrcount;
-		rrule.rrInterval = rec.rrinterval;
-	}
-	jqGet(url,true,fLoad);
-	return rrule;
-}
+
 
 function getDay(myDate) {
 	return (myDate.getMonth() + 1 + "/" + myDate.getDate() + "/" + myDate
@@ -684,7 +688,11 @@ function getCalendarEventRecord(evt){
 	//Returns an event object with all the FullCalendar fields + all the app specific fields
 	var eventID = evt.eventid;
 	if(!eventID) eventID = evt.id;
-	var url = "/cal?pAction=eventRetrieve&eventID=" + eventID;
+	if(!URL_RETRIEVE_EVENT){
+		console.debug("URL_RETRIEVE_EVENT not defined");
+		return evt;
+	}
+	var url = URL_RETRIEVE_EVENT + "&eventID=" + eventID;
 	var evtC;
 	var val;
 	var fLoad = function(data){
@@ -707,7 +715,7 @@ function getCalendarEventRecord(evt){
 		evtC['end'] = moment(evtC['end']).toDate();
 
 	}
-	jqGet(url,true,fLoad);
+	njq.jqGet(url,true,fLoad);
 	return evtC;	
 }
 
@@ -722,7 +730,7 @@ function getCreateTemplate(){
 		tmp = data;
 		createTemplate = tmp;
 	}
-	jqGet(url,true,fLoad,null,'text');
+	njq.jqGet(url,true,fLoad,null,'text');
 	return createTemplate;
 }
 
@@ -732,33 +740,21 @@ function getEditTemplate(eventID){
 	var url;
 	url=DIR_FC +"/EditEvent.htm";
 	url += "?_" + ts;
-	/*
-	if(eventID){
-		//The full-blown CalendarEvent edit
-		url = "/cal?pAction=eventEdit&eventID=" + eventID;
-		url += "&_" + ts;
-
-	}
-	else{
-		//The minimalist event editor
-		url=DIR_FC +"/CreateEditEvent.htm";
-		url += "?_" + ts;
-
-	}*/
 	var tmp;
 	var fLoad = function(data){
 		tmp = data;
 		editTemplate = tmp;
 	}
-	jqGet(url,true,fLoad,null,'text');
+	njq.jqGet(url,true,fLoad,null,'text');
 	return editTemplate;
 }
+
 
 function getRRule(rruleID){
 	var rrule = new RRule();
 	if(!rruleID) return null;
-	var url = "/cal?pAction=GetRecords";
-	url += "&q=/CAL/Event/sql/RetrieveRRULE.sql";
+	var url = URL_RETRIEVE_RULE;
+	if(!url){console.debug("URL_RETRIEVE_RRULE not defined");return;}
 	
 	url += "&rruleID=" + rruleID;
 	var fLoad = function(data){
@@ -775,7 +771,7 @@ function getRRule(rruleID){
 		rrule.rrCount = rec.rrcount;
 		rrule.rrInterval = rec.rrinterval;
 	}
-	jqGet(url,true,fLoad);
+	njq.jqGet(url,true,fLoad);
 	return rrule;
 }
 
@@ -790,10 +786,9 @@ function getRRuleTemplate(){
 		tmp = data;
 		rruleTemplate = tmp;
 	}
-	jqGet(url,true,fLoad,null,'text');
+	njq.jqGet(url,true,fLoad,null,'text');
 	return rruleTemplate;
 }
-
 function initEventControls(evt,f){
 	//Setup the date fields
 	//setDateTimeField(f);
@@ -898,8 +893,8 @@ function initRRuleControls(rrule,evt){
 	}
 	if(months>=6) delete myFreqOpts.Months;
 
-	setOptions("rFrequencyCode",myFreqOpts,rrule.rFrequencyCode);
-	setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
+	njq.setOptions("rFrequencyCode",myFreqOpts,rrule.rFrequencyCode);
+	njq.setOptions("rrInterval",rrIntervalOpts,rrule.rrInterval);
 	//$("#rFrequencyCode").val(rrule.rfrequencycode);
 	//$("#rrInterval").val(rrule.rrinterval);
 	$(".datepicker").datepicker();
@@ -941,8 +936,8 @@ function initRRuleControls(rrule,evt){
 
 function loadCalendarCategories(evt){
 	//Get the categories defined for calendar
-	var url = "/cal?pAction=GetRecords";
-	url += "&q=/CAL/Calendar/sql/GetCalendarCategories.sql";
+	var url = URL_RETRIEVE_CATEGORIES;
+	if(!url){console.debug("URL_RETRIEVE_CATEGORIES not defined");return;}
 	url += "&calendarID=" + calendarID;
 	var evtC;
 	var val;
@@ -950,7 +945,7 @@ function loadCalendarCategories(evt){
 		var catRecs = data;
 		evtCategoryData = catRecs;
 	}
-	jqGet(url,true,fLoad);
+	njq.jqGet(url,true,fLoad);
 }
 
 function reloadCalendar(){
@@ -1062,6 +1057,7 @@ function setEvtRecurrenceSelect(evt){
 
 
 function setEvtCategorySelect(evt){
+	if(!flg_USE_CATEGORIES){ return;}
 	if(!evtCategoryData)loadCalendarCategories();
 	
 	$("#categoryCode").empty()
@@ -1340,14 +1336,18 @@ function updateEventTimes(evt){
 	var end = moment(evt.end);
 	var evtAllDay = evt.allDay?1:0;
 	if(!end) end = start;
-	var url = "/cal?pAction=eventUpdate";
+	var url = URL_UPDATE_EVENT;
+	if(!url){
+		console.debug("URL_UPDATE_EVENT not defined");
+		return evt;
+	}
 	url += "&eventID=" + evt.id;
 	url += "&calendarID=" + evt.calendarid;
 	url +="&evtStartString=" + start.format(fmtDateTime);
 	url +="&evtEndString=" + end.format(fmtDateTime);
 	url += "&evtAllDay=" + evtAllDay;
 	url +="&flgUpdate=true";
-	jqGet(url,true,null);
+	njq.jqGet(url,true,null);
 }
 
 function updateAndCloseEvent(f){
@@ -1417,7 +1417,7 @@ function updateFCEvent(f,evt){
 		var v = globEvent[k];
 		evtObj[k] = v;
 	}
-	var url ="/cal?pAction=eventUpdate";
+	var url = URL_UPDATE_EVENT;
 	f.action=url;
 	//TODO
 	var fLoad = function(data){
@@ -1452,7 +1452,8 @@ function updateRRule(f) {
 		return false;
 	}
 	// Send the event to the back end
-	var url = "/cal?pAction=rruleUpdate";
+	var url = URL_UPDATE_RULE;
+	if(!url){console.debug("URL_UPDATE_RULE not defined");return;}
 	f.action = url;
 	var event;
 	var id;
